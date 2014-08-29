@@ -4,9 +4,23 @@ import (
 	"fmt"
 	"github.com/ActiveState/tail"
 	"github.com/op/go-logging"
+	"net/http"
 	"regexp"
 	"strings"
 )
+
+func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fn(w, r, "sadfds")
+	}
+}
+
+func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
+	var log = logging.MustGetLogger("example")
+	log.Info(fmt.Sprintf("Request for %s\n", r.URL.Path))
+	fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
+
+}
 
 func main() {
 
@@ -22,8 +36,12 @@ func main() {
 	logging.SetFormatter(logging.MustStringFormatter(format))
 
 	log.Info("Graphite News -- Showing which new metrics are available since 2014\n")
+	log.Notice("Graphite News -- Serving UI on: http://localhost:2934\n")
+
+	http.HandleFunc("/view/", makeHandler(viewHandler))
+	go http.ListenAndServe(":2934", nil)
+
 	log.Notice("Graphite News -- Showing which new metrics are available since 2014\n")
-	log.Error("Graphite News -- Showing which new metrics are available since 2014\n")
 	var dataPath = regexp.MustCompile(`\[creates\] creating (database) file .*/whisper/(.*)\.wsp`)
 
 	t, err := tail.TailFile("./creates.log", tail.Config{Follow: true, ReOpen: true, MustExist: true})
