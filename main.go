@@ -33,9 +33,9 @@ func main() {
 			//	log.Info(match)
 			if len(match) > 0 {
 				log.Info(line.Text)
-				ds := fmt.Sprintf("%v", strings.Replace(match[2],`/`,`.`,-1))
+				ds := fmt.Sprintf("%v", strings.Replace(match[2], `/`, `.`, -1))
 				dss = append(dss, ds)
-				log.Notice( fmt.Sprintf("Found new datasource, total: %v, newly added: %s", len(dss), ds) )
+				log.Notice(fmt.Sprintf("Found new datasource, total: %v, newly added: %s", len(dss), ds))
 			}
 		}
 	}
