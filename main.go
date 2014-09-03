@@ -9,41 +9,23 @@ import (
 	"strings"
 )
 
-func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
+func makeHandler(fn func(http.ResponseWriter, *http.Request, []string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fn(w, r, "sadfds")
+		fn(w, r)
 	}
 }
 
-func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
+func viewHandler(w http.ResponseWriter, r *http.Request, dss []string) {
 	var log = logging.MustGetLogger("example")
 	log.Info(fmt.Sprintf("Request for %s\n", r.URL.Path))
-	fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
-
+	fmt.Fprintf(w, "Hi there, I love %s %s!", r.URL.Path[1:], dss)
 }
 
-func main() {
-
-	// Setup logger https://github.com/op/go-logging/blob/master/examples/example.go
+func tailLogfile(dss []string, c chan string) {
 	var log = logging.MustGetLogger("example")
 
-	var dss []string
-
-	// Example format string. Everything except the message has a custom color
-	// which is dependent on the log level. Many fields have a custom output
-	// formatting too, eg. the time returns the hour down to the milli second.
-	var format = "%{color}%{time:15:04:05.000000} [%{pid}] ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}"
-	logging.SetFormatter(logging.MustStringFormatter(format))
-
-	log.Info("Graphite News -- Showing which new metrics are available since 2014\n")
-	log.Notice("Graphite News -- Serving UI on: http://localhost:2934\n")
-
-	http.HandleFunc("/view/", makeHandler(viewHandler))
-	go http.ListenAndServe(":2934", nil)
-
-	log.Notice("Graphite News -- Showing which new metrics are available since 2014\n")
+	//var dss []string
 	var dataPath = regexp.MustCompile(`\[creates\] creating (database) file .*/whisper/(.*)\.wsp`)
-
 	t, err := tail.TailFile("./creates.log", tail.Config{Follow: true, ReOpen: true, MustExist: true})
 	if err == nil {
 		for line := range t.Lines {
@@ -57,5 +39,26 @@ func main() {
 			}
 		}
 	}
-	fmt.Println(err)
+	c <- fmt.Sprintf("%s", err)
+}
+
+func main() {
+	error_channel := make(chan string)
+	var dss []string
+	var log = logging.MustGetLogger("example")
+	var format = "%{color}%{time:15:04:05.000000} [%{pid}] ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}"
+
+	// Setup logger https://github.com/op/go-logging/blob/master/examples/example.go
+	logging.SetFormatter(logging.MustStringFormatter(format))
+	log.Info("Graphite News -- Showing which new metrics are available since 2014\n")
+	log.Notice("Graphite News -- Serving UI on: http://localhost:2934\n")
+#http://screamingatmyscreen.com/2013/6/http-request-and-goroutines/
+	http.HandleFunc("/view/", makeHandler(viewHandler))
+	go http.ListenAndServe(":2934", nil)
+	go tailLogfile(dss, error_channel)
+
+	log.Notice("Graphite News -- Showing which new metrics are available since 2014\n")
+
+	// Wait for errors to appear then shut down
+	log.Notice(<-error_channel)
 }
