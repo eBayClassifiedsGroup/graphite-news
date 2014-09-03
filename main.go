@@ -52,7 +52,7 @@ func main() {
 	logging.SetFormatter(logging.MustStringFormatter(format))
 	log.Info("Graphite News -- Showing which new metrics are available since 2014\n")
 	log.Notice("Graphite News -- Serving UI on: http://localhost:2934\n")
-#http://screamingatmyscreen.com/2013/6/http-request-and-goroutines/
+#http://stackoverflow.com/questions/18487923/golang-storing-caching-values-to-be-served-in-following-http-requests
 	http.HandleFunc("/view/", makeHandler(viewHandler))
 	go http.ListenAndServe(":2934", nil)
 	go tailLogfile(dss, error_channel)
