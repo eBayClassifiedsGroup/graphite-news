@@ -27,10 +27,10 @@ type state struct {
 // way to do this, plmk.
 var State = &state{&sync.RWMutex{}, []Datasource{}}
 
-func viewHandler(w http.ResponseWriter, r *http.Request) {
+func jsonHandler(w http.ResponseWriter, r *http.Request) {
 	var log = logging.MustGetLogger("example")
 
-	log.Notice("viewHandler: acquiring read-lock")
+	log.Notice("jsonHandler: acquiring read-lock")
 	State.RLock()         // grab a lock, but then don't forget to
 	defer State.RUnlock() // unlock it again once we're done
 
@@ -65,7 +65,7 @@ func tailLogfile(c chan string) {
 			match := dataPath.FindStringSubmatch(line.Text)
 			if len(match) > 0 {
 				ds := fmt.Sprintf("%s", strings.Replace(match[2], `/`, `.`, -1))
-				tmp := Datasource{Name: ds, Create_date: match[1], Params: match[3] }
+				tmp := Datasource{Name: ds, Create_date: match[1], Params: match[3]}
 				addItemToState(tmp)
 				log.Notice(fmt.Sprintf("Found new datasource, total: %v, newly added: %v", len(State.Vals), tmp))
 			}
@@ -84,9 +84,7 @@ func main() {
 	log.Info("Graphite News -- Showing which new metrics are available since 2014\n")
 	log.Notice("Graphite News -- Serving UI on: http://localhost:2934\n")
 
-	// http://stackoverflow.com/questions/18487923/golang-storing-caching-values-to-be-served-in-following-http-requests
-
-	http.HandleFunc("/view/", viewHandler)
+	http.HandleFunc("/json/", jsonHandler)
 	go http.ListenAndServe(":2934", nil)
 	go tailLogfile(error_channel)
 
