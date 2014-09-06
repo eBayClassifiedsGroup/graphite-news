@@ -64,13 +64,10 @@ func tailLogfile(dss []string, c chan string) {
 		for line := range t.Lines {
 			match := dataPath.FindStringSubmatch(line.Text)
 			if len(match) > 0 {
-				log.Info(line.Text)
-				log.Info(fmt.Sprintf("%s -- %s -- %s -- %s",  match[1], match[2], match[3]))
-				log.Info("  ^----")
 				ds := fmt.Sprintf("%s", strings.Replace(match[2], `/`, `.`, -1))
-				addItemToState(Datasource{Name: ds, Create_date: match[1], Params: match[3] })
-				dss = append(dss, ds)
-				log.Notice(fmt.Sprintf("Found new datasource, total: %v, newly added: %s", len(dss), ds))
+				tmp := Datasource{Name: ds, Create_date: match[1], Params: match[3] }
+				addItemToState(tmp)
+				log.Notice(fmt.Sprintf("Found new datasource, total: %v, newly added: %v", len(State.Vals), tmp))
 			}
 		}
 	}
