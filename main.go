@@ -22,7 +22,7 @@ var State = &state{&sync.RWMutex{}, map[string]string{}}
 
 func viewHandler(w http.ResponseWriter, r *http.Request) {
 	var log = logging.MustGetLogger("example")
-	log.Notice("viewHandler: acquiring lock")
+	log.Notice("viewHandler: acquiring read-lock")
 
 	State.RLock()         // grab a lock, but then don't forget to
 	defer State.RUnlock() // unlock it again once we're done
@@ -33,10 +33,11 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 
 func addItemToState(line string) {
 	var log = logging.MustGetLogger("example")
-	log.Notice("addItemToState: acquiring lock")
+	log.Notice("addItemToState: acquiring write-lock")
 	State.Lock()
 	defer State.Unlock()
 	State.Vals["bogus"] = line
+	State.Vals["bogus2"] = line
 }
 
 func tailLogfile(dss []string, c chan string) {
