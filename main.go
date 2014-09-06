@@ -67,7 +67,7 @@ func tailLogfile(c chan string) {
 				ds := fmt.Sprintf("%s", strings.Replace(match[2], `/`, `.`, -1))
 				tmp := Datasource{Name: ds, Create_date: match[1], Params: match[3]}
 				addItemToState(tmp)
-				log.Notice(fmt.Sprintf("Found new datasource, total: %v, newly added: %v", len(State.Vals), tmp))
+				log.Notice(fmt.Sprintf("Found new datasource, total: %v, newly added: %+v", len(State.Vals), tmp))
 			}
 		}
 	}
