@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/ActiveState/tail"
 	"github.com/op/go-logging"
@@ -10,34 +11,48 @@ import (
 	"sync"
 )
 
+type Datasource struct {
+	Create_date string // for now, obv needs to be different
+	Name        string
+	Params      string
+}
+
 type state struct {
-	*sync.RWMutex                   // inherits locking methods
-	Vals          map[string]string // map ids to values
+	*sync.RWMutex // inherits locking methods
+	Vals          []Datasource
 }
 
 // declare a globally scoped State variable, otherwise
 // the request handlers can't get to it. If there is a better
 // way to do this, plmk.
-var State = &state{&sync.RWMutex{}, map[string]string{}}
+var State = &state{&sync.RWMutex{}, []Datasource{}}
 
 func viewHandler(w http.ResponseWriter, r *http.Request) {
 	var log = logging.MustGetLogger("example")
-	log.Notice("viewHandler: acquiring read-lock")
 
+	log.Notice("viewHandler: acquiring read-lock")
 	State.RLock()         // grab a lock, but then don't forget to
 	defer State.RUnlock() // unlock it again once we're done
 
 	log.Info(fmt.Sprintf("Request for %s\n", r.URL.Path))
-	fmt.Fprintf(w, "Hi there, I love %s %s!", r.URL.Path[1:], State.Vals)
+	js, err := json.Marshal(State.Vals)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
 }
 
-func addItemToState(line string) {
+func addItemToState(ds Datasource) {
 	var log = logging.MustGetLogger("example")
 	log.Notice("addItemToState: acquiring write-lock")
 	State.Lock()
 	defer State.Unlock()
-	State.Vals["bogus"] = line
-	State.Vals["bogus2"] = line
+	defer log.Notice("addItemToState: released write-lock")
+	State.Vals = append(State.Vals, ds)
 }
 
 func tailLogfile(dss []string, c chan string) {
@@ -51,7 +66,7 @@ func tailLogfile(dss []string, c chan string) {
 			if len(match) > 0 {
 				log.Info(line.Text)
 				ds := fmt.Sprintf("%v", strings.Replace(match[2], `/`, `.`, -1))
-				addItemToState(ds)
+				addItemToState(Datasource{Name: ds, Create_date: "adsfsdfs"})
 				dss = append(dss, ds)
 				log.Notice(fmt.Sprintf("Found new datasource, total: %v, newly added: %s", len(dss), ds))
 			}
