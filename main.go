@@ -12,8 +12,8 @@ import (
 )
 
 type Datasource struct {
-	Create_date string // for now, obv needs to be different
 	Name        string
+	Create_date string // for now, obv needs to be different
 	Params      string
 }
 
@@ -58,15 +58,17 @@ func addItemToState(ds Datasource) {
 func tailLogfile(dss []string, c chan string) {
 	var log = logging.MustGetLogger("example")
 
-	var dataPath = regexp.MustCompile(`\[creates\] creating (database) file .*/whisper/(.*)\.wsp`)
+	var dataPath = regexp.MustCompile(`.*out:(.*) :: \[creates\] creating database file .*/whisper/(.*)\.wsp (.*)`)
 	t, err := tail.TailFile("./creates.log", tail.Config{Follow: true, ReOpen: true, MustExist: true})
 	if err == nil {
 		for line := range t.Lines {
 			match := dataPath.FindStringSubmatch(line.Text)
 			if len(match) > 0 {
 				log.Info(line.Text)
-				ds := fmt.Sprintf("%v", strings.Replace(match[2], `/`, `.`, -1))
-				addItemToState(Datasource{Name: ds, Create_date: "adsfsdfs"})
+				log.Info(fmt.Sprintf("%s -- %s -- %s -- %s",  match[1], match[2], match[3]))
+				log.Info("  ^----")
+				ds := fmt.Sprintf("%s", strings.Replace(match[2], `/`, `.`, -1))
+				addItemToState(Datasource{Name: ds, Create_date: match[1], Params: match[3] })
 				dss = append(dss, ds)
 				log.Notice(fmt.Sprintf("Found new datasource, total: %v, newly added: %s", len(dss), ds))
 			}
