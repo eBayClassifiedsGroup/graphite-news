@@ -55,7 +55,7 @@ func addItemToState(ds Datasource) {
 	State.Vals = append(State.Vals, ds)
 }
 
-func tailLogfile(dss []string, c chan string) {
+func tailLogfile(c chan string) {
 	var log = logging.MustGetLogger("example")
 
 	var dataPath = regexp.MustCompile(`.*out:(.*) :: \[creates\] creating database file .*/whisper/(.*)\.wsp (.*)`)
@@ -76,7 +76,6 @@ func tailLogfile(dss []string, c chan string) {
 
 func main() {
 	error_channel := make(chan string)
-	var dss []string
 	var log = logging.MustGetLogger("example")
 	var format = "%{color}%{time:15:04:05.000000} [%{pid}] ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}"
 
@@ -89,7 +88,7 @@ func main() {
 
 	http.HandleFunc("/view/", viewHandler)
 	go http.ListenAndServe(":2934", nil)
-	go tailLogfile(dss, error_channel)
+	go tailLogfile(error_channel)
 
 	log.Notice("Graphite News -- Showing which new metrics are available since 2014\n")
 
