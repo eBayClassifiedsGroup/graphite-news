@@ -9,11 +9,12 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Datasource struct {
 	Name        string
-	Create_date string // for now, obv needs to be different
+	Create_date time.Time
 	Params      string
 }
 
@@ -46,6 +47,14 @@ func jsonHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
+func parseTime(s string) time.Time {
+	// 24/08/2014 20:59:54
+	var t , _ = time.Parse("2006-01-02 15:04:05","2011-01-19 22:15")
+	fmt.Println(t)
+	return t
+}
+
+
 func addItemToState(ds Datasource) {
 	var log = logging.MustGetLogger("example")
 	log.Notice("addItemToState: acquiring write-lock")
@@ -65,7 +74,7 @@ func tailLogfile(c chan string) {
 			match := dataPath.FindStringSubmatch(line.Text)
 			if len(match) > 0 {
 				ds := fmt.Sprintf("%s", strings.Replace(match[2], `/`, `.`, -1))
-				tmp := Datasource{Name: ds, Create_date: match[1], Params: match[3]}
+				tmp := Datasource{Name: ds, Create_date: parseTime(match[1]), Params: match[3]}
 				addItemToState(tmp)
 				log.Notice(fmt.Sprintf("Found new datasource, total: %v, newly added: %+v", len(State.Vals), tmp))
 			}
