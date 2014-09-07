@@ -49,7 +49,7 @@ func jsonHandler(w http.ResponseWriter, r *http.Request) {
 
 func parseTime(s string) time.Time {
 	// 24/08/2014 20:59:54
-	var t , _ = time.Parse("2006-01-02 15:04:05","2011-01-19 22:15")
+	var t , _ = time.Parse("02/01/2006 15:04:05",s)
 	fmt.Println(t)
 	return t
 }
