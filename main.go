@@ -33,10 +33,12 @@ func jsonHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Notice("jsonHandler: acquiring read-lock")
 	State.RLock()         // grab a lock, but then don't forget to
-	defer State.RUnlock() // unlock it again once we're done
+	log.Notice("jsonHandler: got read-lock")
 
 	log.Info(fmt.Sprintf("Request for %s\n", r.URL.Path))
 	js, err := json.Marshal(State.Vals)
+	State.RUnlock() // unlock it again once we're done
+	log.Notice("jsonHandler: releaseing read-lock")
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -61,6 +63,7 @@ func addItemToState(ds Datasource) {
 	State.Lock()
 	defer State.Unlock()
 	defer log.Notice("addItemToState: released write-lock")
+	log.Notice("addItemToState: got write-lock")
 	State.Vals = append(State.Vals, ds)
 }
 
@@ -74,6 +77,9 @@ func tailLogfile(c chan string) {
 			match := dataPath.FindStringSubmatch(line.Text)
 			if len(match) > 0 {
 				ds := fmt.Sprintf("%s", strings.Replace(match[2], `/`, `.`, -1))
+				// log: 	  /opt/graphite/storage/whisper/big-imac-2011_local/collectd/memory/memory-inactive.wsp
+				// real:          mac-mini-2014_local.collectd.memory.memory-active
+				// found: 	  big-imac-2011_local.collectd.memory.memory-inactive
 				tmp := Datasource{Name: ds, Create_date: parseTime(match[1]), Params: match[3]}
 				addItemToState(tmp)
 				log.Notice(fmt.Sprintf("Found new datasource, total: %v, newly added: %+v", len(State.Vals), tmp))
