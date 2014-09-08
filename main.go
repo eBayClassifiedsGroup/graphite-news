@@ -32,9 +32,9 @@ type state struct {
 var State = &state{&sync.RWMutex{}, []Datasource{}}
 
 func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
-       return func(w http.ResponseWriter, r *http.Request) {
-               fn(w, r)
-       }
+	return func(w http.ResponseWriter, r *http.Request) {
+		fn(w, r)
+	}
 }
 
 func jsonHandler(w http.ResponseWriter, r *http.Request) {
@@ -133,12 +133,12 @@ func main() {
 	// Set up metrics registry
 	go metrics.Log(
 		metrics.DefaultRegistry,
-		5e9,	// Xe9 -> X seconds
+		5e9, // Xe9 -> X seconds
 		log.New(os.Stderr, "metrics ", log.Lmicroseconds),
 	)
 
 	// Set up web handlers in goroutines
-		
+
 	http.HandleFunc("/json/", makeHandler(jsonHandler))
 	http.HandleFunc("/stats/", makeHandler(statsHandler))
 	go http.ListenAndServe(":2934", nil)
