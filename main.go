@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"github.com/ActiveState/tail"
 	"github.com/op/go-logging"
+	"github.com/rcrowley/go-metrics"
+	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -28,36 +31,55 @@ type state struct {
 // way to do this, plmk.
 var State = &state{&sync.RWMutex{}, []Datasource{}}
 
-func jsonHandler(w http.ResponseWriter, r *http.Request) {
-	var log = logging.MustGetLogger("example")
-
-	log.Notice("jsonHandler: acquiring read-lock")
-	State.RLock()         // grab a lock, but then don't forget to
-	log.Notice("jsonHandler: got read-lock")
-
-	log.Info(fmt.Sprintf("Request for %s\n", r.URL.Path))
-	js, err := json.Marshal(State.Vals)
-	State.RUnlock() // unlock it again once we're done
-	log.Notice("jsonHandler: releaseing read-lock")
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
+func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
+       return func(w http.ResponseWriter, r *http.Request) {
+               fn(w, r)
+       }
 }
 
+func jsonHandler(w http.ResponseWriter, r *http.Request) {
+	m := metrics.GetOrRegisterTimer("www/jsonHandler", metrics.DefaultRegistry)
+	m.Time(func() {
+		var log = logging.MustGetLogger("example")
+
+		log.Notice("jsonHandler: acquiring read-lock")
+		State.RLock() // grab a lock, but then don't forget to
+		log.Notice("jsonHandler: got read-lock")
+		defer State.RUnlock() // unlock it again once we're done
+		defer log.Notice("jsonHandler: releaseing read-lock")
+
+		log.Info(fmt.Sprintf("Request for %s\n", r.URL.Path))
+		js, err := json.Marshal(State.Vals)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
+	})
+}
+
+func statsHandler(w http.ResponseWriter, r *http.Request) {
+	m := metrics.GetOrRegisterTimer("www/statsHandler", metrics.DefaultRegistry)
+	m.Time(func() {
+		w.Header().Set("Content-Type", "application/json")
+
+		metrics.WriteJSONOnce(metrics.DefaultRegistry, w)
+
+	})
+}
 func parseTime(s string) time.Time {
 	// 24/08/2014 20:59:54
-	var t , _ = time.Parse("02/01/2006 15:04:05",s)
-	fmt.Println(t)
+	var t, _ = time.Parse("02/01/2006 15:04:05", s)
 	return t
 }
 
-
 func addItemToState(ds Datasource) {
+	m_ds := metrics.GetOrRegisterCounter("tail/datasources", metrics.DefaultRegistry)
+	defer m_ds.Inc(1)
+
 	var log = logging.MustGetLogger("example")
 	log.Notice("addItemToState: acquiring write-lock")
 	State.Lock()
@@ -68,12 +90,15 @@ func addItemToState(ds Datasource) {
 }
 
 func tailLogfile(c chan string) {
+	m_lines := metrics.GetOrRegisterCounter("tail/input_lines", metrics.DefaultRegistry)
+
 	var log = logging.MustGetLogger("example")
 
 	var dataPath = regexp.MustCompile(`.*out:(.*) :: \[creates\] creating database file .*/whisper/(.*)\.wsp (.*)`)
 	t, err := tail.TailFile("./creates.log", tail.Config{Follow: true, ReOpen: true, MustExist: true})
 	if err == nil {
 		for line := range t.Lines {
+			m_lines.Inc(1)
 			match := dataPath.FindStringSubmatch(line.Text)
 			if len(match) > 0 {
 				ds := fmt.Sprintf("%s", strings.Replace(match[2], `/`, `.`, -1))
@@ -89,22 +114,39 @@ func tailLogfile(c chan string) {
 	c <- fmt.Sprintf("%s", err)
 }
 
+func metricsRegister() {
+	c := metrics.NewCounter()
+	metrics.Register("foo", c)
+	c.Inc(47)
+}
+
 func main() {
 	error_channel := make(chan string)
-	var log = logging.MustGetLogger("example")
-	var format = "%{color}%{time:15:04:05.000000} [%{pid}] ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}"
 
+	// Set up Logger
 	// Setup logger https://github.com/op/go-logging/blob/master/examples/example.go
+	//var log = logging.MustGetLogger("example")
+	//var format = "%{color}%{time:15:04:05.000000} [%{pid}] ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}"
+	var format = "%{color}%{time:15:04:05} [%{pid}] ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}"
 	logging.SetFormatter(logging.MustStringFormatter(format))
-	log.Info("Graphite News -- Showing which new metrics are available since 2014\n")
-	log.Notice("Graphite News -- Serving UI on: http://localhost:2934\n")
 
-	http.HandleFunc("/json/", jsonHandler)
+	// Set up metrics registry
+	go metrics.Log(
+		metrics.DefaultRegistry,
+		5e9,	// Xe9 -> X seconds
+		log.New(os.Stderr, "metrics ", log.Lmicroseconds),
+	)
+
+	// Set up web handlers in goroutines
+		
+	http.HandleFunc("/json/", makeHandler(jsonHandler))
+	http.HandleFunc("/stats/", makeHandler(statsHandler))
 	go http.ListenAndServe(":2934", nil)
 	go tailLogfile(error_channel)
 
-	log.Notice("Graphite News -- Showing which new metrics are available since 2014\n")
+	//log.Notice("Graphite News -- Showing which new metrics are available since 2014\n")
+	//log.Notice("Graphite News -- Serving UI on: http://localhost:2934\n")
 
 	// Wait for errors to appear then shut down
-	log.Error(<-error_channel)
+	fmt.Println(<-error_channel)
 }
