@@ -1,5 +1,7 @@
 package main
 
+// Implementes awesome stuff,e tc
+
 import (
 	"encoding/json"
 	"fmt"
@@ -35,22 +37,20 @@ var State = &state{&sync.RWMutex{}, []Datasource{}}
 func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := log.New(os.Stdout, "http	", myLogFormat)
-		l.Printf("Request: %+v %+v", r.URL, r)
+
+
 		m := metrics.GetOrRegisterTimer(fmt.Sprintf("%s%s", r.Method, r.URL.Path), metrics.DefaultRegistry)
 		m.Time(func() {
 			fn(w, r)
 		})
+		l.Printf("Request: %v %v %v %v", r.Method, r.URL, r.RemoteAddr, r.Header["User-Agent"])
 	}
 }
 
 func jsonHandler(w http.ResponseWriter, r *http.Request) {
-	l := log.New(os.Stdout, "http	", myLogFormat)
-
 	State.RLock()         // grab a lock, but then don't forget to
-	defer State.RUnlock() // unlock it again once we're done
-
-	l.Printf("Request for %s\n", r.URL.Path)
 	js, err := json.Marshal(State.Vals)
+	State.RUnlock() 	// unlock it again once we're done
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -115,9 +115,13 @@ func main() {
 	//		log.New(os.Stdout, "metrics	", myLogFormat))
 
 	// Set up web handlers in goroutines
-
 	http.HandleFunc("/json/", makeHandler(jsonHandler))
 	http.HandleFunc("/stats/", makeHandler(statsHandler))
+
+	http.Handle("/assets/", 
+		http.StripPrefix("/assets/", 
+		http.FileServer(http.Dir("./assets"))))
+
 	go http.ListenAndServe(":2934", nil)
 	go tailLogfile(error_channel)
 
