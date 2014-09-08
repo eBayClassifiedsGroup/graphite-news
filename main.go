@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/ActiveState/tail"
 	"github.com/rcrowley/go-metrics"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -38,7 +39,6 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := log.New(os.Stdout, "http	", myLogFormat)
 
-
 		m := metrics.GetOrRegisterTimer(fmt.Sprintf("%s%s", r.Method, r.URL.Path), metrics.DefaultRegistry)
 		m.Time(func() {
 			fn(w, r)
@@ -48,9 +48,9 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 }
 
 func jsonHandler(w http.ResponseWriter, r *http.Request) {
-	State.RLock()         // grab a lock, but then don't forget to
+	State.RLock() // grab a lock, but then don't forget to
 	js, err := json.Marshal(State.Vals)
-	State.RUnlock() 	// unlock it again once we're done
+	State.RUnlock() // unlock it again once we're done
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -64,6 +64,15 @@ func jsonHandler(w http.ResponseWriter, r *http.Request) {
 func statsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	metrics.WriteJSONOnce(metrics.DefaultRegistry, w)
+}
+
+func frontpageHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	bs, err := ioutil.ReadFile("index.html")
+	if err != nil {
+		bs = []byte("<b>Fatal Error</b>: index.html file not found.")
+	}
+	w.Write(bs)
 }
 
 func parseTime(s string) time.Time {
@@ -115,12 +124,13 @@ func main() {
 	//		log.New(os.Stdout, "metrics	", myLogFormat))
 
 	// Set up web handlers in goroutines
+	http.HandleFunc("/", makeHandler(frontpageHandler))
 	http.HandleFunc("/json/", makeHandler(jsonHandler))
 	http.HandleFunc("/stats/", makeHandler(statsHandler))
 
-	http.Handle("/assets/", 
-		http.StripPrefix("/assets/", 
-		http.FileServer(http.Dir("./assets"))))
+	http.Handle("/assets/",
+		http.StripPrefix("/assets/",
+			http.FileServer(http.Dir("./assets"))))
 
 	go http.ListenAndServe(":2934", nil)
 	go tailLogfile(error_channel)
