@@ -46,7 +46,7 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 func jsonHandler(w http.ResponseWriter, r *http.Request) {
 	l := log.New(os.Stdout, "http	", myLogFormat)
 
-	State.RLock() // grab a lock, but then don't forget to
+	State.RLock()         // grab a lock, but then don't forget to
 	defer State.RUnlock() // unlock it again once we're done
 
 	l.Printf("Request for %s\n", r.URL.Path)
@@ -62,8 +62,8 @@ func jsonHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func statsHandler(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		metrics.WriteJSONOnce(metrics.DefaultRegistry, w)
+	w.Header().Set("Content-Type", "application/json")
+	metrics.WriteJSONOnce(metrics.DefaultRegistry, w)
 }
 
 func parseTime(s string) time.Time {
@@ -109,10 +109,10 @@ func main() {
 	l := log.New(os.Stdout, "main	", myLogFormat)
 
 	// Set up metrics registry
-	go metrics.Log(
-		metrics.DefaultRegistry,
-		5e9, // Xe9 -> X seconds
-		log.New(os.Stdout, "metrics	", myLogFormat))
+	//	go metrics.Log(
+	//		metrics.DefaultRegistry,
+	//		5e9, // Xe9 -> X seconds
+	//		log.New(os.Stdout, "metrics	", myLogFormat))
 
 	// Set up web handlers in goroutines
 
