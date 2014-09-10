@@ -1,5 +1,5 @@
 var gn = {};
-gn.refresh_ms = 1500;
+gn.refresh_ms = 5000;
 
 function template(row, dss) {
   row.find('.item_name').text(dss.Name);
@@ -7,8 +7,6 @@ function template(row, dss) {
   row.find('.item_options').text(dss.Params);
   return row;
 }
-
-
 
 gn.updateDs = function() {
 	$.getJSON(
@@ -20,10 +18,15 @@ gn.updateDs = function() {
 			$.map(data, function(el) {
 				// map all the data onto the HTML table
 				// if el.Name already exists, just skip it
-				var newRow = $('#cart .template').clone().removeClass('template');
-				template(newRow, el)
-				.prependTo('#cart')
-				.fadeIn();
+				if ($('span').filter(
+				     function (index) { return $(this).text() == el.Name; }
+				).length == 0)
+					{
+						var newRow = $('#cart .template').clone().removeClass('template');
+						template(newRow, el)
+						.prependTo('#cart')
+						.fadeIn();
+					}
 				});
 			});
 }
@@ -55,5 +58,6 @@ $(document).ready(function() {
 		$("#hideButton").click( function() {
 			gn.toggle();
 		});
+		gn.updateDs()
 	}
 });
