@@ -14,28 +14,28 @@ gn.updateDs = function() {
   var jqxhr = $.getJSON( "/json/", function() {
     console.log( "success" );
   })
-    .done(function() {
-      gn.serverActive();
-       data = jqxhr.responseJSON;
-      $("#dscount").text(data.length);
-      $.map(data, function(el) {
-        // map all the data onto the HTML table
-        // if el.Name already exists, just skip it
-        if ($('span').filter(
-          function (index) { return $(this).text() == el.Name; }
-        ).length == 0)
-          {
-            var newRow = $('#cart .template').clone().removeClass('template');
-            template(newRow, el)
-            .prependTo('#cart')
-            .fadeIn();
-          }
-       });
-    })
-    .fail(function() {
-      gn.serverInactive();
-      console.log( "ERROR: Could not perform getJSON request. Server down?" );
-    })
+  .done(function() {
+    gn.serverActive();
+     data = jqxhr.responseJSON;
+    $("#dscount").text(data.length);
+    $.map(data, function(el) {
+      // map all the data onto the HTML table
+      // if el.Name already exists, just skip it
+      if ($('span').filter(
+        function (index) { return $(this).text() == el.Name; }
+      ).length == 0)
+        {
+          var newRow = $('#cart .template').clone().removeClass('template');
+          template(newRow, el)
+          .prependTo('#cart')
+          .fadeIn();
+        }
+     });
+  })
+  .fail(function() {
+    gn.serverInactive();
+    console.log( "ERROR: Could not perform getJSON request. Server down?" );
+  })
 }
 
 // functions to signal the status of connectivity to backend server
@@ -53,41 +53,37 @@ gn.serverInactive = function() {
 // Starting, Stopping and toggling our requests to the
 // server.
 gn.start = function() {
-	if(!gn.timer) {
-	gn.timer = setInterval(function() {gn.updateDs();}, gn.refresh_ms);
-	$("#hideButton").text('Pauze')
-	$("#hideButton").toggleClass('btn-danger');
-	$("#hideButton").toggleClass('btn-success');
+  if(!gn.timer) {
+  gn.timer = setInterval(function() {gn.updateDs();}, gn.refresh_ms);
+  $("#hideButton").text('Pauze')
+  $("#hideButton").toggleClass('btn-danger');
+  $("#hideButton").toggleClass('btn-success');
   }
 }
 gn.stop = function() {
-	clearInterval(gn.timer);
-	gn.timer = undefined;
-	$("#hideButton").text('Activate')
-	$("#hideButton").toggleClass('btn-danger');
-	$("#hideButton").toggleClass('btn-success');
+  clearInterval(gn.timer);
+  gn.timer = undefined;
+  $("#hideButton").text('Activate')
+  $("#hideButton").toggleClass('btn-danger');
+  $("#hideButton").toggleClass('btn-success');
 }
 gn.toggle = function() {
-	if (gn.timer === undefined) {
-		gn.start();
-	} else {
-		gn.stop();
-	}
+  if (gn.timer === undefined) {
+    gn.start();
+  } else {
+    gn.stop();
+  }
 }
 
 var init = false;
 $(document).ready(function() {
-	if (!init){
-		init = true;
+  if (!init){
+    init = true;
 
-
-		$('body').data("gn-last-server-see", new Date().getTime());
-		console.log($('body').data("gn-last-server-see"));
-
-		gn.start()
-		$("#hideButton").click( function() {
-			gn.toggle();
-		});
-		gn.updateDs()
-	}
+    gn.start()
+    $("#hideButton").click( function() {
+      gn.toggle();
+    });
+    gn.updateDs()
+  }
 });
