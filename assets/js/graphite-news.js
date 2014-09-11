@@ -11,31 +11,51 @@ function template(row, dss) {
 // Update the set of data sources in the table, filter out
 // the ones that we already have based on DS name.
 gn.updateDs = function() {
-	$.getJSON(
-			'/json/',
-			function(data) {
-			$("#dscount").text(data.length);
-
-			$.map(data, function(el) {
-				// map all the data onto the HTML table
-				// if el.Name already exists, just skip it
-				if ($('span').filter(
-				     function (index) { return $(this).text() == el.Name; }
-				).length == 0)
-					{
-						var newRow = $('#cart .template').clone().removeClass('template');
-						template(newRow, el)
-						.prependTo('#cart')
-						.fadeIn();
-					}
-				});
-			});
+  var jqxhr = $.getJSON( "/json/", function() {
+    console.log( "success" );
+  })
+    .done(function() {
+      gn.serverActive();
+       data = jqxhr.responseJSON;
+      $("#dscount").text(data.length);
+      $.map(data, function(el) {
+        // map all the data onto the HTML table
+        // if el.Name already exists, just skip it
+        if ($('span').filter(
+          function (index) { return $(this).text() == el.Name; }
+        ).length == 0)
+          {
+            var newRow = $('#cart .template').clone().removeClass('template');
+            template(newRow, el)
+            .prependTo('#cart')
+            .fadeIn();
+          }
+       });
+    })
+    .fail(function() {
+      gn.serverInactive();
+      console.log( "ERROR: Could not perform getJSON request. Server down?" );
+    })
 }
 
+// functions to signal the status of connectivity to backend server
+gn.serverActive = function() {
+  $("#servercon").addClass('label-success');
+  $("#servercon").removeClass('label-danger');
+  $("#cart").removeClass('transparent');
+}
+gn.serverInactive = function() {
+  $("#servercon").removeClass('label-success');
+  $("#servercon").addClass('label-danger');
+  $("#cart").addClass('transparent');
+}
+
+// Starting, Stopping and toggling our requests to the
+// server.
 gn.start = function() {
 	if(!gn.timer) {
 	gn.timer = setInterval(function() {gn.updateDs();}, gn.refresh_ms);
-	$("#hideButton").text('Disconnect')
+	$("#hideButton").text('Pauze')
 	$("#hideButton").toggleClass('btn-danger');
 	$("#hideButton").toggleClass('btn-success');
   }
@@ -43,7 +63,7 @@ gn.start = function() {
 gn.stop = function() {
 	clearInterval(gn.timer);
 	gn.timer = undefined;
-	$("#hideButton").text('Reconnect')
+	$("#hideButton").text('Activate')
 	$("#hideButton").toggleClass('btn-danger');
 	$("#hideButton").toggleClass('btn-success');
 }
@@ -59,6 +79,11 @@ var init = false;
 $(document).ready(function() {
 	if (!init){
 		init = true;
+
+
+		$('body').data("gn-last-server-see", new Date().getTime());
+		console.log($('body').data("gn-last-server-see"));
+
 		gn.start()
 		$("#hideButton").click( function() {
 			gn.toggle();
