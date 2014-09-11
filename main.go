@@ -43,7 +43,8 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 		m.Time(func() {
 			fn(w, r)
 		})
-		l.Printf("Request: %v %v %v %v", r.Method, r.URL, r.RemoteAddr, r.Header["User-Agent"])
+		//l.Printf("Request: %v %v %v %v", r.Method, r.URL, r.RemoteAddr, r.Header["User-Agent"])
+		l.Printf("Request: %v %v %v %v", r.Method, r.URL, r.RemoteAddr)
 	}
 }
 
@@ -89,7 +90,7 @@ func addItemToState(ds Datasource) {
 	// We're writing to shared datastructures, grab a Write-lock
 	State.Lock()
 	defer State.Unlock()
-
+// TODO: find out if we have  already exactly this DS in State, then don't add it again.
 	State.Vals = append(State.Vals, ds)
 	l.Printf("New datasource: %+v (total: %v)", ds.Name, len(State.Vals))
 }

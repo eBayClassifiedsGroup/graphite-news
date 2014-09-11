@@ -8,11 +8,12 @@ function template(row, dss) {
   return row;
 }
 
+// Update the set of data sources in the table, filter out
+// the ones that we already have based on DS name.
 gn.updateDs = function() {
 	$.getJSON(
 			'/json/',
 			function(data) {
-			//console.table(data);
 			$("#dscount").text(data.length);
 
 			$.map(data, function(el) {
@@ -35,12 +36,16 @@ gn.start = function() {
 	if(!gn.timer) {
 	gn.timer = setInterval(function() {gn.updateDs();}, gn.refresh_ms);
 	$("#hideButton").text('Disconnect')
+	$("#hideButton").toggleClass('btn-danger');
+	$("#hideButton").toggleClass('btn-success');
   }
 }
 gn.stop = function() {
 	clearInterval(gn.timer);
 	gn.timer = undefined;
 	$("#hideButton").text('Reconnect')
+	$("#hideButton").toggleClass('btn-danger');
+	$("#hideButton").toggleClass('btn-success');
 }
 gn.toggle = function() {
 	if (gn.timer === undefined) {
