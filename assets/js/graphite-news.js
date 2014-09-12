@@ -1,5 +1,26 @@
 var gn = {};
-gn.refresh_ms = 5000;
+
+gn.JsonPullInterval = 0;
+gn.GraphiteURL = '';
+gn.getConfig = function() {
+  var jqxhr = $.getJSON( "/config/", function() {
+  })
+  .done(function() {
+    data = jqxhr.responseJSON;
+    gn.JsonPullInterval = data.JsonPullInterval;
+    gn.GraphiteURL = data.GraphiteURL;
+
+    // New config is read in, but the interval is attached to the
+    // timer and wont be updated dynamically. So depending on the 
+    // current state (active/inactive) we need to cycle that
+    if (gn.timer === undefined) {
+      // not running, noop
+    } else {
+      gn.toggle();
+      gn.toggle();
+    }
+  });
+}
 
 function template(row, dss) {
   row.find('.item_name').text(dss.Name);
@@ -7,8 +28,6 @@ function template(row, dss) {
   row.find('.item_options').text(dss.Params);
   return row;
 }
-
-
 
 // Update the set of data sources in the table, filter out
 // the ones that we already have based on DS name.
@@ -81,7 +100,7 @@ gn.serverInactive = function() {
 // server.
 gn.start = function() {
   if(!gn.timer) {
-  gn.timer = setInterval(function() {gn.updateDs();}, gn.refresh_ms);
+  gn.timer = setInterval(function() {gn.updateDs();}, gn.JsonPullInterval);
   $("#hideButton").text('Pauze')
   $("#hideButton").toggleClass('btn-danger');
   $("#hideButton").toggleClass('btn-success');
@@ -107,10 +126,13 @@ $(document).ready(function() {
   if (!init){
     init = true;
 
+    gn.getConfig()
     gn.start()
+
     $("#hideButton").click( function() {
       gn.toggle();
     });
     gn.updateDs()
+    setInterval(function() {gn.getConfig();}, /* 1 minute */ 1*60*1000);
   }
 });

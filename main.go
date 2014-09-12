@@ -1,6 +1,11 @@
 package main
 
-// Implementes awesome stuff,e tc
+// Implements a server that tails Graphite's logs
+// finds out when new data sources become available
+// and serves out a UI that lets you see/render those
+// continiously.
+
+// Written by J.A. Oldenbeuving / ojilles@gmail.com
 
 import (
 	"encoding/json"
@@ -15,6 +20,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"flag"
 )
 
 type Datasource struct {
@@ -28,12 +34,30 @@ type state struct {
 	Vals          []Datasource
 }
 
+type configuration struct {
+	JsonPullInterval	int
+	GraphiteURL		string
+	ServerPort		int
+	logfileLocation		string
+}
+
 const myLogFormat = log.Ldate | log.Ltime
 
 // declare a globally scoped State variable, otherwise
 // the request handlers can't get to it. If there is a better
 // way to do this, plmk.
 var State = &state{&sync.RWMutex{}, []Datasource{}}
+
+// Instantiate struct to hold our configuration
+var C = configuration{JsonPullInterval:5000, GraphiteURL:"asdfsdfadsf"};
+
+
+func init() {
+	flag.IntVar(&C.JsonPullInterval, "i", 5000,"Number of [ms] interval for Web UI's to update themselves. Clients only update their config every 5min")
+	flag.IntVar(&C.ServerPort, "p", 2934, "Port number the webserver will bind to (pick a free one please)")
+	flag.StringVar(&C.logfileLocation, "l", "creates.log", "Location of the Carbon logfiles we need to tail")
+}
+
 
 func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -43,8 +67,8 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 		m.Time(func() {
 			fn(w, r)
 		})
+		l.Printf("Request: %v %v %v %v", r.Method, r.URL, r.RemoteAddr, m)
 		//l.Printf("Request: %v %v %v %v", r.Method, r.URL, r.RemoteAddr, r.Header["User-Agent"])
-		l.Printf("Request: %v %v %v %v", r.Method, r.URL, r.RemoteAddr)
 	}
 }
 
@@ -65,6 +89,12 @@ func jsonHandler(w http.ResponseWriter, r *http.Request) {
 func statsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	metrics.WriteJSONOnce(metrics.DefaultRegistry, w)
+}
+
+func configHandler(w http.ResponseWriter, r *http.Request) {
+	js, _ := json.Marshal(C)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
 }
 
 func frontpageHandler(w http.ResponseWriter, r *http.Request) {
@@ -99,7 +129,7 @@ func tailLogfile(c chan string) {
 	m_lines := metrics.GetOrRegisterCounter("tail/input_lines", metrics.DefaultRegistry)
 
 	var dataPath = regexp.MustCompile(`.*out:(.*) :: \[creates\] creating database file .*/whisper/(.*)\.wsp (.*)`)
-	t, err := tail.TailFile("./creates.log", tail.Config{Follow: true, ReOpen: true, MustExist: true})
+	t, err := tail.TailFile(C.logfileLocation, tail.Config{Follow: true, ReOpen: true, MustExist: true})
 	if err == nil {
 		for line := range t.Lines {
 			m_lines.Inc(1)
@@ -117,6 +147,7 @@ func tailLogfile(c chan string) {
 func main() {
 	error_channel := make(chan string)
 	l := log.New(os.Stdout, "main	", myLogFormat)
+	flag.Parse()
 
 	// Set up metrics registry
 	//	go metrics.Log(
@@ -128,17 +159,19 @@ func main() {
 	http.HandleFunc("/", makeHandler(frontpageHandler))
 	http.HandleFunc("/json/", makeHandler(jsonHandler))
 	http.HandleFunc("/stats/", makeHandler(statsHandler))
+	http.HandleFunc("/config/", makeHandler(configHandler))
 
 	http.Handle("/assets/",
 		http.StripPrefix("/assets/",
 			http.FileServer(http.Dir("./assets"))))
-
-	go http.ListenAndServe(":2934", nil)
+	go http.ListenAndServe(fmt.Sprintf(":%v",C.ServerPort), nil)
 	go tailLogfile(error_channel)
 
 	l.Println("Graphite News -- Showing which new metrics are available since 2014\n")
-	l.Println("Graphite News -- Serving UI on: http://localhost:2934\n")
-
+	l.Println(fmt.Sprintf("Graphite News -- http://localhost:%v		:: Main User Interface",C.ServerPort))
+	l.Println(fmt.Sprintf("Graphite News -- http://localhost:%v/config/	:: Internal configuration in JSON",C.ServerPort))
+	l.Println(fmt.Sprintf("Graphite News -- http://localhost:%v/stats/	:: Internal Metrics in JSON",C.ServerPort))
+	l.Println(fmt.Sprintf("Configuration: %+v", C))
 	// Wait for errors to appear then shut down
 	l.Println(<-error_channel)
 }
