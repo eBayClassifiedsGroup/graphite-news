@@ -56,9 +56,6 @@ gn.updateDs = function() {
               .end()
               .insertAfter('#cart .gnhover').fadeIn();
 	  });
-
-
-
         }
      });
   })
