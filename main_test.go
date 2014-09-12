@@ -40,7 +40,7 @@ func TestDontStoreMoreThan1k(t *testing.T) {
 		ds.Name = fmt.Sprintf("TestDontStoreMoreThan1k: %v", i)
 		addItemToState(ds)
 	}
-	if (len(State.Vals) > maxState) {
+	if len(State.Vals) > maxState {
 		t.Fatal("Able to add more than maxState items into State.Vals")
 	}
 }

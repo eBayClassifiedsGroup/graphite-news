@@ -47,6 +47,7 @@ const myLogFormat = log.Ldate | log.Ltime
 // the request handlers can't get to it. If there is a better
 // way to do this, plmk.
 var State = &state{&sync.RWMutex{}, []Datasource{}}
+
 const maxState int = 1000
 
 // Instantiate struct to hold our configuration
@@ -66,8 +67,7 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 		m.Time(func() {
 			fn(w, r)
 		})
-		l.Printf("Request: %v %v %v %v", r.Method, r.URL, r.RemoteAddr, m)
-		//l.Printf("Request: %v %v %v %v", r.Method, r.URL, r.RemoteAddr, r.Header["User-Agent"])
+		l.Printf("Request: %v %v %v", r.Method, r.URL, r.RemoteAddr)
 	}
 }
 
