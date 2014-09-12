@@ -9,6 +9,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/ActiveState/tail"
 	"github.com/rcrowley/go-metrics"
@@ -20,7 +21,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"flag"
 )
 
 type Datasource struct {
@@ -35,10 +35,10 @@ type state struct {
 }
 
 type configuration struct {
-	JsonPullInterval	int
-	GraphiteURL		string
-	ServerPort		int
-	logfileLocation		string
+	JsonPullInterval int
+	GraphiteURL      string
+	ServerPort       int
+	logfileLocation  string
 }
 
 const myLogFormat = log.Ldate | log.Ltime
@@ -47,17 +47,16 @@ const myLogFormat = log.Ldate | log.Ltime
 // the request handlers can't get to it. If there is a better
 // way to do this, plmk.
 var State = &state{&sync.RWMutex{}, []Datasource{}}
+const maxState int = 1000
 
 // Instantiate struct to hold our configuration
-var C = configuration{JsonPullInterval:5000, GraphiteURL:"asdfsdfadsf"};
-
+var C = configuration{JsonPullInterval: 5000, GraphiteURL: "asdfsdfadsf"}
 
 func init() {
-	flag.IntVar(&C.JsonPullInterval, "i", 5000,"Number of [ms] interval for Web UI's to update themselves. Clients only update their config every 5min")
+	flag.IntVar(&C.JsonPullInterval, "i", 5000, "Number of [ms] interval for Web UI's to update themselves. Clients only update their config every 5min")
 	flag.IntVar(&C.ServerPort, "p", 2934, "Port number the webserver will bind to (pick a free one please)")
 	flag.StringVar(&C.logfileLocation, "l", "creates.log", "Location of the Carbon logfiles we need to tail")
 }
-
 
 func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -113,16 +112,31 @@ func parseTime(s string) time.Time {
 }
 
 func addItemToState(ds Datasource) {
+	var foundDuplicate = false
 	l := log.New(os.Stdout, "tail	", myLogFormat)
 	m_ds := metrics.GetOrRegisterCounter("tail/datasources", metrics.DefaultRegistry)
-	defer m_ds.Inc(1)
 
-	// We're writing to shared datastructures, grab a Write-lock
-	State.Lock()
-	defer State.Unlock()
-// TODO: find out if we have  already exactly this DS in State, then don't add it again.
-	State.Vals = append(State.Vals, ds)
-	l.Printf("New datasource: %+v (total: %v)", ds.Name, len(State.Vals))
+	// Find out if we already have one with the same name, if
+	// so skip it.
+	State.RLock()
+	for i := 0; i < len(State.Vals) && !foundDuplicate; i++ {
+		if ds.Name == State.Vals[i].Name {
+			foundDuplicate = true
+		}
+	}
+	State.RUnlock()
+
+	if !foundDuplicate {
+		// We're writing to shared datastructures, grab a Write-lock
+		State.Lock()
+		defer State.Unlock()
+		State.Vals = append(State.Vals, ds)
+		defer m_ds.Inc(1)
+		if len(State.Vals) > maxState {
+			State.Vals = State.Vals[:1000]
+		}
+		l.Printf("New datasource: %+v (total: %v)", ds.Name, len(State.Vals))
+	}
 }
 
 func tailLogfile(c chan string) {
@@ -164,13 +178,13 @@ func main() {
 	http.Handle("/assets/",
 		http.StripPrefix("/assets/",
 			http.FileServer(http.Dir("./assets"))))
-	go http.ListenAndServe(fmt.Sprintf(":%v",C.ServerPort), nil)
+	go http.ListenAndServe(fmt.Sprintf(":%v", C.ServerPort), nil)
 	go tailLogfile(error_channel)
 
 	l.Println("Graphite News -- Showing which new metrics are available since 2014\n")
-	l.Println(fmt.Sprintf("Graphite News -- http://localhost:%v		:: Main User Interface",C.ServerPort))
-	l.Println(fmt.Sprintf("Graphite News -- http://localhost:%v/config/	:: Internal configuration in JSON",C.ServerPort))
-	l.Println(fmt.Sprintf("Graphite News -- http://localhost:%v/stats/	:: Internal Metrics in JSON",C.ServerPort))
+	l.Println(fmt.Sprintf("Graphite News -- http://localhost:%v		:: Main User Interface", C.ServerPort))
+	l.Println(fmt.Sprintf("Graphite News -- http://localhost:%v/config/	:: Internal configuration in JSON", C.ServerPort))
+	l.Println(fmt.Sprintf("Graphite News -- http://localhost:%v/stats/	:: Internal Metrics in JSON", C.ServerPort))
 	l.Println(fmt.Sprintf("Configuration: %+v", C))
 	// Wait for errors to appear then shut down
 	l.Println(<-error_channel)
