@@ -8,11 +8,13 @@ function template(row, dss) {
   return row;
 }
 
+
+
 // Update the set of data sources in the table, filter out
 // the ones that we already have based on DS name.
 gn.updateDs = function() {
   var jqxhr = $.getJSON( "/json/", function() {
-    console.log( "success" );
+    // initial success on calling getJSON
   })
   .done(function() {
     gn.serverActive();
@@ -29,6 +31,22 @@ gn.updateDs = function() {
           template(newRow, el)
           .prependTo('#cart')
           .fadeIn();
+
+          // Add hover/click event listners to the table, because
+          // I don't know jQuery well enough to solve this in a different
+          // way (prependTo call looses those listners)
+          $('#cart tbody tr').hover(function() {
+            $(this).addClass('gnhover');
+          }, function() {
+            $(this).removeClass('gnhover');
+          });
+	
+          $('#cart tbody tr').click(function() {
+		console.log("asdfsafas");
+	} );
+
+
+
         }
      });
   })
