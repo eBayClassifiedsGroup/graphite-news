@@ -42,12 +42,19 @@ gn.updateDs = function() {
           })
 	  // on click, add a row underneath with the graph(s)
           .click(function() {
-		console.log("asdfsafas"+ $(this));
-		var tmp = $('#cart .templateds').clone().removeClass('templateds').addClass('timeseries');
-		// empty text
-		tmp.find('td').text('.');
-		tmp.find('td:first').html("<img src=''"+$(this).width() * 0.8+"> Link"+$(this).find("td:first").text());
-		tmp.insertAfter('#cart .gnhover').fadeIn();
+            // find any and all tr's with class timeseries and remove them (want to keep UI
+            // simple for now and only have one open at a time
+            $('#cart .timeseries').remove();
+
+            // now copy a template and add that behind the row that was just clicked
+            var tmp = $('#cart .templateds').clone()
+              .removeClass('templateds')
+              .addClass('timeseries');
+
+            tmp.find('td:first')
+              .html("<img src=''"+$(this).width() * 0.8+"> Link"+$(this).find("td:first").text())
+              .end()
+              .insertAfter('#cart .gnhover').fadeIn();
 	  });
 
 
