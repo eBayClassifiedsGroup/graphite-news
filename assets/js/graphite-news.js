@@ -73,6 +73,7 @@ gn.updateDs = function() {
             tmp.find('td:first')
               .html("<img src=''"+$(this).width() * 0.8+"> Link"+$(this).find("td:first").text())
               .end()
+              .click( function(){ $(this).remove() })
               .insertAfter('#cart .gnhover').fadeIn();
 	  });
         }
