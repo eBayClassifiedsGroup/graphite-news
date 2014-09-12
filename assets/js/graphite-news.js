@@ -30,20 +30,25 @@ gn.updateDs = function() {
           var newRow = $('#cart .template').clone().removeClass('template');
           template(newRow, el)
           .prependTo('#cart')
-          .fadeIn();
+          .fadeIn()
 
           // Add hover/click event listners to the table, because
           // I don't know jQuery well enough to solve this in a different
           // way (prependTo call looses those listners)
-          $('#cart tbody tr').hover(function() {
+          .hover(function() {
             $(this).addClass('gnhover');
           }, function() {
             $(this).removeClass('gnhover');
-          });
-	
-          $('#cart tbody tr').click(function() {
-		console.log("asdfsafas");
-	} );
+          })
+	  // on click, add a row underneath with the graph(s)
+          .click(function() {
+		console.log("asdfsafas"+ $(this));
+		var tmp = $('#cart .templateds').clone().removeClass('templateds').addClass('timeseries');
+		// empty text
+		tmp.find('td').text('.');
+		tmp.find('td:first').html("<img src=''"+$(this).width() * 0.8+"> Link"+$(this).find("td:first").text());
+		tmp.insertAfter('#cart .gnhover').fadeIn();
+	  });
 
 
 
