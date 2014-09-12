@@ -102,7 +102,7 @@ gn.serverInactive = function() {
 gn.start = function() {
   if(!gn.timer) {
   gn.timer = setInterval(function() {gn.updateDs();}, gn.JsonPullInterval);
-  $("#hideButton").text('Pauze')
+  $("#hideButton").text('Pause')
   $("#hideButton").toggleClass('btn-danger');
   $("#hideButton").toggleClass('btn-success');
   }
