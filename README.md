@@ -52,17 +52,6 @@ or whatever is storing the standard output of the carbon deamon) and the output
 
 Currently `-l` does not allow for globbing or multiple files in general.
 
-Compilation
------------
-By default (`go build` or `go install`) the binary created does include all
-static assets (such as javascript, css) needed for proper functioning, but
-those are **not pulled from the files on disk**, but rather from `bindata.go`.
-Regenerating `bindata.go` can be done with the provided `build-dst.sh` script.
-This will result with all fresh assets in the binary (able to just `scp` to
-another machine for example).  Effectively, `build-dst.sh` only does:
-
-`go-bindata -ignore=\\.swp$ index.html favicon.ico assets/...`
-
 Usage
 -----
 After starting `graphite-news`, it will tail through your logfile in search for
@@ -90,3 +79,15 @@ Walkthrough:
    and once found will automatically refresh and put that onto the page.
 
 As you can see, very simple interaction model!
+
+To Compile
+-----------
+By default (`go build` or `go install`) the binary created does include all
+static assets (such as javascript, css) needed for proper functioning, but
+those are **not pulled from the files on disk**, but rather from `bindata.go`.
+Regenerating `bindata.go` can be done with the provided `build-dst.sh` script.
+This will result with all fresh assets in the binary (able to just `scp` to
+another machine for example).  Effectively, `build-dst.sh` only does:
+
+`go-bindata -ignore=\\.swp$ index.html favicon.ico assets/...`
+
