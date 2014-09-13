@@ -31,6 +31,10 @@ Couple of options, but the easiest (assuming you have Go setup) is just running
 the following:
 
     $ go get github.com/ojilles/graphite-news
+    $ $GOPATH/bin/graphite-news -l $GOPATH/src/github.com/ojilles/graphite-news/creates.log
+
+(That last command will get it up and running, but is obviously not how you
+actually want to operate this piece of software)
 
 This should get you a `graphite-news` binary in `$GOPATH/bin`. Getting help gives you:
 
