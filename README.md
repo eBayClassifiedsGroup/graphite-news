@@ -27,7 +27,7 @@ Installing
 Couple of options, but the easiest (assuming you have Go setup) is just running
 the following:
 
-  $ go get github.com/ojilles/graphite-news
+    $ go get github.com/ojilles/graphite-news
 
 This should get you a `graphite-news` binary in `$GOPATH/bin`. Getting help gives you:
 
