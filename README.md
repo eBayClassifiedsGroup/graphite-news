@@ -34,7 +34,9 @@ the following:
     $ $GOPATH/bin/graphite-news -l $GOPATH/src/github.com/ojilles/graphite-news/creates.log
 
 (That last command will get it up and running, but is obviously not how you
-actually want to operate this piece of software)
+actually want to operate this piece of software.) If you have recently created new data sources, you will see those. If not, create a new one for testing purposes with:
+
+    $ PORT=2003; SERVER=localhost; echo "local.random.diceroll 4 `date +%s`" | nc ${SERVER} ${PORT}
 
 This should get you a `graphite-news` binary in `$GOPATH/bin`. Getting help gives you:
 
