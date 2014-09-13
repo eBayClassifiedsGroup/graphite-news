@@ -35,13 +35,29 @@ func TestDuplicateEntriesIntoState(t *testing.T) {
 }
 
 func TestDontStoreMoreThan1k(t *testing.T) {
+	// test that we dont keep more than maxState items in the state
+	// and that when we go above it, we keep the last values (and not
+	// the oldest ones)
+
+	// reset internal state so that we know exactly what the last value
+	// should be in the internal state
+	State.Vals = nil
+	const testString string = "TestDontStoreMoreThanMaxState, item: "
+	
 	ds := Datasource{Name: "tmp"}
 	for i := 0; i < maxState+10; i++ {
-		ds.Name = fmt.Sprintf("TestDontStoreMoreThan1k: %v", i)
+		ds.Name = fmt.Sprintf("%v %v", testString, i)
 		addItemToState(ds)
 	}
 	if len(State.Vals) > maxState {
 		t.Fatal("Able to add more than maxState items into State.Vals")
+	}
+
+	// At this point the last item should be maxState+10-1 (0 indexed, remember)
+	knownName := fmt.Sprintf("%v %v", testString, maxState+10-1)
+	lastItem := State.Vals[len(State.Vals)-1:]
+	if lastItem[0].Name != knownName {
+		t.Fatal(fmt.Sprintf("The expected last item (after adding more then maxState items) was [%v] but actually found [%v]!", knownName, lastItem[0].Name))
 	}
 }
 

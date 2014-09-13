@@ -139,7 +139,7 @@ func addItemToState(ds Datasource) {
 		State.Vals = append(State.Vals, ds)
 		defer m_ds.Inc(1)
 		if len(State.Vals) > maxState {
-			State.Vals = State.Vals[:maxState]
+			State.Vals = State.Vals[len(State.Vals)-maxState:maxState]
 		}
 		l.Printf("New datasource: %+v (total: %v)", ds.Name, len(State.Vals))
 	}
