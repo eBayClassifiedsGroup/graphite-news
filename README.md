@@ -34,13 +34,10 @@ This should get you a `graphite-news` binary in `$GOPATH/bin`. Getting help give
     $ graphite-news -h
     Usage of graphite-news:
 
-      -i=5000: Number of [ms] interval for Web UI's to update themselves. Clients only update their
-         config every 5min
-
+      -i=5000: Number of [ms] interval for Web UI's to update themselves. Clients only update 
+         their config every 5min
       -l="creates.log": Location of the Carbon logfiles we need to tail
-
       -p=2934: Port number the webserver will bind to (pick a free one please)
-
       -s="http://localhost:8080": URL of the Graphite render API, no trailing slash. Apple 
          rendevous domains do not work (like http://machine.local, use IPs in that case)
 
