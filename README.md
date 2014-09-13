@@ -10,16 +10,19 @@ leave it up to you.
 Functionality
 -------------
 Graphite-News keeps tabs on which new data sources appear in your Graphite
-storage so that you can see what new functionallity is being shipped inside
+storage so that you can see what new functionality is being shipped inside
 *your* application. This is then exposed in a easy and simple web interface.
 
 Technology
 ----------
 Build with (or exists despite the following things being used):
  * Go (for tailing, server side state, webserver)
-    * [go-bindata](https://github.com/jteeuwen/go-bindata) (to keep everything in 1 file for easy deployment)
-    * [go-metrics](https://github.com/rcrowley/go-metrics) (ofcourse we keep tabs on our own metrics as well)
+    * [go-bindata](https://github.com/jteeuwen/go-bindata) (to keep 
+      everything in 1 file for easy deployment)
+    * [go-metrics](https://github.com/rcrowley/go-metrics) (of course 
+      we keep tabs on our own metrics as well)
  * jQuery
+ * Bootstrap
  * [Travis.ci](https://travis-ci.org/ojilles/graphite-news) for running all the unit tests: [![Build Status](https://travis-ci.org/ojilles/graphite-news.svg?branch=master)](https://travis-ci.org/ojilles/graphite-news)
 
 Installing
@@ -39,7 +42,7 @@ This should get you a `graphite-news` binary in `$GOPATH/bin`. Getting help give
       -l="creates.log": Location of the Carbon logfiles we need to tail
       -p=2934: Port number the webserver will bind to (pick a free one please)
       -s="http://localhost:8080": URL of the Graphite render API, no trailing slash. Apple 
-         rendevous domains do not work (like http://machine.local, use IPs in that case)
+         rendezvous domains do not work (like http://machine.local, use IPs in that case)
 
 The two important ones are the input (`-l` should point to the carbon logfile,
 or whatever is storing the standard output of the carbon deamon) and the output
@@ -51,7 +54,7 @@ Currently `-l` does not allow for globbing or multiple files in general.
 
 Compilation
 -----------
-By default (`go build` or `go install`) the binary created does **not** inlcude
+By default (`go build` or `go install`) the binary created does **not** include
 all static assets (such as javascript, css) needed for proper functioning. Use
 the provided `build-dst.sh` script to end up with a binary that contains
 everything inside itself (able to just `scp` to another machine for example).
