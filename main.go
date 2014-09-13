@@ -99,7 +99,6 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 func frontpageHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	data, _ := Asset("index.html")
-	data, _ = Asset("index2.html")
 	if len(data) == 0 {
 		data = []byte("<b>Fatal Error</b>: index.html file not found.")
 	}
