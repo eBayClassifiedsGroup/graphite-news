@@ -29,6 +29,18 @@ function template(row, dss) {
   return row;
 }
 
+gn.GraphiteImg = function(dsname, dsdate, width) {
+	if (width < 50) { width = 800 /* some default */ }
+	tmp = "";
+	tmp = tmp + gn.GraphiteURL
+	tmp = tmp + "/render/?width=" +Math.floor(width)
+	tmp = tmp + "&target=cactiStyle("
+	tmp = tmp + escape(dsname)+ ",'si')"
+	tmp = tmp + "&lineMode=connected"
+
+	return tmp
+}
+
 // Update the set of data sources in the table, filter out
 // the ones that we already have based on DS name.
 gn.updateDs = function() {
@@ -69,9 +81,12 @@ gn.updateDs = function() {
             var tmp = $('#cart .templateds').clone()
               .removeClass('templateds')
               .addClass('timeseries');
-
             tmp.find('td:first')
-              .html("<img src=''"+$(this).width() * 0.8+"> Link"+$(this).find("td:first").text())
+              .html("<img src=\""+
+                gn.GraphiteImg(
+                  $(this).find("td:first").text(),
+                  "none",
+                  Math.floor($(this).width() * 0.9))+"\">")
               .end()
               .click( function(){ $(this).remove() })
               .insertAfter('#cart .gnhover').fadeIn();

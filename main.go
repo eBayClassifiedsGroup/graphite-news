@@ -48,15 +48,16 @@ const myLogFormat = log.Ldate | log.Ltime
 // way to do this, plmk.
 var State = &state{&sync.RWMutex{}, []Datasource{}}
 
-const maxState int = 1000
+const maxState int = 100
 
 // Instantiate struct to hold our configuration
-var C = configuration{JsonPullInterval: 5000, GraphiteURL: "asdfsdfadsf"}
+var C = configuration{JsonPullInterval: 5000}
 
 func init() {
 	flag.IntVar(&C.JsonPullInterval, "i", 5000, "Number of [ms] interval for Web UI's to update themselves. Clients only update their config every 5min")
 	flag.IntVar(&C.ServerPort, "p", 2934, "Port number the webserver will bind to (pick a free one please)")
 	flag.StringVar(&C.logfileLocation, "l", "creates.log", "Location of the Carbon logfiles we need to tail")
+	flag.StringVar(&C.GraphiteURL, "s", "http://localhost:8080", "URL of the Graphite render API, no trailing slash. Apple rendevous domains do not work (like http://machine.local, use IPs in that case)")
 }
 
 func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
@@ -105,6 +106,11 @@ func frontpageHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
+func faviconHandler(w http.ResponseWriter, r *http.Request) {
+	data, _ := Asset("favicon.ico")
+	w.Write(data)
+}
+
 func parseTime(s string) time.Time {
 	// 24/08/2014 20:59:54
 	var t, _ = time.Parse("02/01/2006 15:04:05", s)
@@ -133,7 +139,7 @@ func addItemToState(ds Datasource) {
 		State.Vals = append(State.Vals, ds)
 		defer m_ds.Inc(1)
 		if len(State.Vals) > maxState {
-			State.Vals = State.Vals[:1000]
+			State.Vals = State.Vals[:maxState]
 		}
 		l.Printf("New datasource: %+v (total: %v)", ds.Name, len(State.Vals))
 	}
@@ -174,6 +180,7 @@ func main() {
 	http.HandleFunc("/json/", makeHandler(jsonHandler))
 	http.HandleFunc("/stats/", makeHandler(statsHandler))
 	http.HandleFunc("/config/", makeHandler(configHandler))
+	http.HandleFunc("/favicon.ico", makeHandler(faviconHandler))
 
 	http.Handle("/assets/",
 	    http.FileServer(
