@@ -43,7 +43,7 @@ func TestDontStoreMoreThan1k(t *testing.T) {
 	// should be in the internal state
 	State.Vals = nil
 	const testString string = "TestDontStoreMoreThanMaxState, item: "
-	
+
 	ds := Datasource{Name: "tmp"}
 	for i := 0; i < maxState+10; i++ {
 		ds.Name = fmt.Sprintf("%v %v", testString, i)
