@@ -145,20 +145,25 @@ func addItemToState(ds Datasource) {
 	}
 }
 
-func tailLogfile(c chan string) {
+func parseLine(line string) {
 	m_lines := metrics.GetOrRegisterCounter("tail/input_lines", metrics.DefaultRegistry)
-
 	var dataPath = regexp.MustCompile(`.*out:(.*) :: \[creates\] creating database file .*/whisper/(.*)\.wsp (.*)`)
+	m_lines.Inc(1)
+	match := dataPath.FindStringSubmatch(line)
+	if len(match) > 0 {
+		ds := fmt.Sprintf("%s", strings.Replace(match[2], `/`, `.`, -1))
+		tmp := Datasource{Name: ds, Create_date: parseTime(match[1]), Params: match[3]}
+		addItemToState(tmp)
+	}
+
+}
+
+func tailLogfile(c chan string) {
+
 	t, err := tail.TailFile(C.logfileLocation, tail.Config{Follow: true, ReOpen: true, MustExist: true})
 	if err == nil {
 		for line := range t.Lines {
-			m_lines.Inc(1)
-			match := dataPath.FindStringSubmatch(line.Text)
-			if len(match) > 0 {
-				ds := fmt.Sprintf("%s", strings.Replace(match[2], `/`, `.`, -1))
-				tmp := Datasource{Name: ds, Create_date: parseTime(match[1]), Params: match[3]}
-				addItemToState(tmp)
-			}
+			parseLine(line.Text)
 		}
 	}
 	c <- fmt.Sprintf("%s", err)
