@@ -17224,20 +17224,21 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() ([]byte, error){
-	"index.html": index_html,
-	"favicon.ico": favicon_ico,
-	"assets/css/bootstrap-theme.css": assets_css_bootstrap_theme_css,
+	"index.html":                         index_html,
+	"favicon.ico":                        favicon_ico,
+	"assets/css/bootstrap-theme.css":     assets_css_bootstrap_theme_css,
 	"assets/css/bootstrap-theme.css.map": assets_css_bootstrap_theme_css_map,
 	"assets/css/bootstrap-theme.min.css": assets_css_bootstrap_theme_min_css,
-	"assets/css/bootstrap.css": assets_css_bootstrap_css,
-	"assets/css/bootstrap.css.map": assets_css_bootstrap_css_map,
-	"assets/css/bootstrap.min.css": assets_css_bootstrap_min_css,
-	"assets/css/gn.css": assets_css_gn_css,
-	"assets/js/bootstrap.js": assets_js_bootstrap_js,
-	"assets/js/bootstrap.min.js": assets_js_bootstrap_min_js,
-	"assets/js/graphite-news.js": assets_js_graphite_news_js,
-	"assets/js/jquery-1.11.1.js": assets_js_jquery_1_11_1_js,
+	"assets/css/bootstrap.css":           assets_css_bootstrap_css,
+	"assets/css/bootstrap.css.map":       assets_css_bootstrap_css_map,
+	"assets/css/bootstrap.min.css":       assets_css_bootstrap_min_css,
+	"assets/css/gn.css":                  assets_css_gn_css,
+	"assets/js/bootstrap.js":             assets_js_bootstrap_js,
+	"assets/js/bootstrap.min.js":         assets_js_bootstrap_min_js,
+	"assets/js/graphite-news.js":         assets_js_graphite_news_js,
+	"assets/js/jquery-1.11.1.js":         assets_js_jquery_1_11_1_js,
 }
+
 // AssetDir returns the file names below a certain
 // directory embedded in the file by go-bindata.
 // For example if you run go-bindata on data/... and data contains the
@@ -17274,40 +17275,28 @@ func AssetDir(name string) ([]string, error) {
 }
 
 type _bintree_t struct {
-	Func func() ([]byte, error)
+	Func     func() ([]byte, error)
 	Children map[string]*_bintree_t
 }
+
 var _bintree = &_bintree_t{nil, map[string]*_bintree_t{
-	"index.html": &_bintree_t{index_html, map[string]*_bintree_t{
-	}},
-	"favicon.ico": &_bintree_t{favicon_ico, map[string]*_bintree_t{
-	}},
+	"index.html":  &_bintree_t{index_html, map[string]*_bintree_t{}},
+	"favicon.ico": &_bintree_t{favicon_ico, map[string]*_bintree_t{}},
 	"assets": &_bintree_t{nil, map[string]*_bintree_t{
 		"css": &_bintree_t{nil, map[string]*_bintree_t{
-			"bootstrap.css": &_bintree_t{assets_css_bootstrap_css, map[string]*_bintree_t{
-			}},
-			"bootstrap.css.map": &_bintree_t{assets_css_bootstrap_css_map, map[string]*_bintree_t{
-			}},
-			"bootstrap.min.css": &_bintree_t{assets_css_bootstrap_min_css, map[string]*_bintree_t{
-			}},
-			"gn.css": &_bintree_t{assets_css_gn_css, map[string]*_bintree_t{
-			}},
-			"bootstrap-theme.css": &_bintree_t{assets_css_bootstrap_theme_css, map[string]*_bintree_t{
-			}},
-			"bootstrap-theme.css.map": &_bintree_t{assets_css_bootstrap_theme_css_map, map[string]*_bintree_t{
-			}},
-			"bootstrap-theme.min.css": &_bintree_t{assets_css_bootstrap_theme_min_css, map[string]*_bintree_t{
-			}},
+			"bootstrap.css":           &_bintree_t{assets_css_bootstrap_css, map[string]*_bintree_t{}},
+			"bootstrap.css.map":       &_bintree_t{assets_css_bootstrap_css_map, map[string]*_bintree_t{}},
+			"bootstrap.min.css":       &_bintree_t{assets_css_bootstrap_min_css, map[string]*_bintree_t{}},
+			"gn.css":                  &_bintree_t{assets_css_gn_css, map[string]*_bintree_t{}},
+			"bootstrap-theme.css":     &_bintree_t{assets_css_bootstrap_theme_css, map[string]*_bintree_t{}},
+			"bootstrap-theme.css.map": &_bintree_t{assets_css_bootstrap_theme_css_map, map[string]*_bintree_t{}},
+			"bootstrap-theme.min.css": &_bintree_t{assets_css_bootstrap_theme_min_css, map[string]*_bintree_t{}},
 		}},
 		"js": &_bintree_t{nil, map[string]*_bintree_t{
-			"bootstrap.min.js": &_bintree_t{assets_js_bootstrap_min_js, map[string]*_bintree_t{
-			}},
-			"graphite-news.js": &_bintree_t{assets_js_graphite_news_js, map[string]*_bintree_t{
-			}},
-			"jquery-1.11.1.js": &_bintree_t{assets_js_jquery_1_11_1_js, map[string]*_bintree_t{
-			}},
-			"bootstrap.js": &_bintree_t{assets_js_bootstrap_js, map[string]*_bintree_t{
-			}},
+			"bootstrap.min.js": &_bintree_t{assets_js_bootstrap_min_js, map[string]*_bintree_t{}},
+			"graphite-news.js": &_bintree_t{assets_js_graphite_news_js, map[string]*_bintree_t{}},
+			"jquery-1.11.1.js": &_bintree_t{assets_js_jquery_1_11_1_js, map[string]*_bintree_t{}},
+			"bootstrap.js":     &_bintree_t{assets_js_bootstrap_js, map[string]*_bintree_t{}},
 		}},
 	}},
 }}

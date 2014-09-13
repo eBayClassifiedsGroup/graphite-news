@@ -12,6 +12,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ActiveState/tail"
+	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/rcrowley/go-metrics"
 	"log"
 	"net/http"
@@ -20,7 +21,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"github.com/elazarl/go-bindata-assetfs"
 )
 
 type Datasource struct {
@@ -183,8 +183,8 @@ func main() {
 	http.HandleFunc("/favicon.ico", makeHandler(faviconHandler))
 
 	http.Handle("/assets/",
-	    http.FileServer(
-	    &assetfs.AssetFS{Asset, AssetDir, ""}))
+		http.FileServer(
+			&assetfs.AssetFS{Asset, AssetDir, ""}))
 
 	go http.ListenAndServe(fmt.Sprintf(":%v", C.ServerPort), nil)
 	go tailLogfile(error_channel)
