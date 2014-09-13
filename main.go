@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"github.com/ActiveState/tail"
 	"github.com/rcrowley/go-metrics"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -21,6 +20,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	//"github.com/jteeuwen/go-bindata"
 )
 
 type Datasource struct {
@@ -98,11 +98,12 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 
 func frontpageHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	bs, err := ioutil.ReadFile("index.html")
-	if err != nil {
-		bs = []byte("<b>Fatal Error</b>: index.html file not found.")
+	data, _ := Asset("index.html")
+	data, _ = Asset("index2.html")
+	if len(data) == 0 {
+		data = []byte("<b>Fatal Error</b>: index.html file not found.")
 	}
-	w.Write(bs)
+	w.Write(data)
 }
 
 func parseTime(s string) time.Time {
