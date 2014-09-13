@@ -54,11 +54,12 @@ Currently `-l` does not allow for globbing or multiple files in general.
 
 Compilation
 -----------
-By default (`go build` or `go install`) the binary created does **not** include
-all static assets (such as javascript, css) needed for proper functioning. Use
-the provided `build-dst.sh` script to end up with a binary that contains
-everything inside itself (able to just `scp` to another machine for example).
-Effectively, `build-dst.sh` only does:
+By default (`go build` or `go install`) the binary created does include all
+static assets (such as javascript, css) needed for proper functioning, but
+those are **not pulled from the files on disk**, but rather from `bindata.go`.
+Regenerating `bindata.go` can be done with the provided `build-dst.sh` script.
+This will result with all fresh assets in the binary (able to just `scp` to
+another machine for example).  Effectively, `build-dst.sh` only does:
 
 `go-bindata -ignore=\\.swp$ index.html favicon.ico assets/...`
 
