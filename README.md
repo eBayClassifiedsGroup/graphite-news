@@ -32,12 +32,17 @@ the following:
 This should get you a `graphite-news` binary in `$GOPATH/bin`. Getting help gives you:
 
     $ graphite-news -h
-    
     Usage of graphite-news:
-      -i=5000: Number of [ms] interval for Web UI's to update themselves. Clients only update their config every 5min
+
+      -i=5000: Number of [ms] interval for Web UI's to update themselves. Clients only update their
+         config every 5min
+
       -l="creates.log": Location of the Carbon logfiles we need to tail
+
       -p=2934: Port number the webserver will bind to (pick a free one please)
-      -s="http://localhost:8080": URL of the Graphite render API, no trailing slash. Apple rendevous domains do not work (like http://machine.local, use IPs in that case)
+
+      -s="http://localhost:8080": URL of the Graphite render API, no trailing slash. Apple 
+         rendevous domains do not work (like http://machine.local, use IPs in that case)
 
 The two important ones are the input (`-l` should point to the carbon logfile,
 or whatever is storing the standard output of the carbon deamon) and the output
@@ -46,6 +51,16 @@ or whatever is storing the standard output of the carbon deamon) and the output
     $ ~/graphite-news -l /opt/graphite/log/launchctl-carbon.stdout -s http://192.168.1.66:8080
 
 Currently `-l` does not allow for globbing or multiple files in general.
+
+Compilation
+-----------
+By default (`go build` or `go install`) the binary created does **not** inlcude
+all static assets (such as javascript, css) needed for proper functioning. Use
+the provided `build-dst.sh` script to end up with a binary that contains
+everything inside itself (able to just `scp` to another machine for example).
+Effectively, `build-dst.sh` only does:
+
+`go-bindata -ignore=\\.swp$ index.html favicon.ico assets/...`
 
 Usage
 -----
