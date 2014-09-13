@@ -20,7 +20,7 @@ import (
 	"strings"
 	"sync"
 	"time"
-	//"github.com/jteeuwen/go-bindata"
+	"github.com/elazarl/go-bindata-assetfs"
 )
 
 type Datasource struct {
@@ -176,8 +176,9 @@ func main() {
 	http.HandleFunc("/config/", makeHandler(configHandler))
 
 	http.Handle("/assets/",
-		http.StripPrefix("/assets/",
-			http.FileServer(http.Dir("./assets"))))
+	    http.FileServer(
+	    &assetfs.AssetFS{Asset, AssetDir, ""}))
+
 	go http.ListenAndServe(fmt.Sprintf(":%v", C.ServerPort), nil)
 	go tailLogfile(error_channel)
 

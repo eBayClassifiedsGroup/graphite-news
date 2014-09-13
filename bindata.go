@@ -108,6 +108,23 @@ func index_html() ([]byte, error) {
 	)
 }
 
+func favicon_ico() ([]byte, error) {
+	return bindata_read([]byte{
+		0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x00, 0xff, 0xa4, 0x88,
+		0x31, 0x0e, 0x03, 0x20, 0x0c, 0x03, 0x8d, 0xc4, 0x03, 0x32, 0x75, 0xee,
+		0xc8, 0x33, 0xf9, 0x06, 0x13, 0x5f, 0xe1, 0x4f, 0x9d, 0x32, 0xb9, 0x0e,
+		0xa9, 0x2a, 0x21, 0x55, 0x2c, 0xb5, 0x63, 0x9f, 0x62, 0xa0, 0xc8, 0x66,
+		0xa6, 0xae, 0x68, 0x05, 0x78, 0x00, 0x68, 0x8a, 0x29, 0x4f, 0x60, 0xef,
+		0x77, 0xf5, 0x7d, 0xe8, 0x3d, 0x11, 0x8e, 0x49, 0xb5, 0xd6, 0xd2, 0xc2,
+		0x7d, 0x20, 0x13, 0xe1, 0x98, 0xe2, 0x27, 0x9d, 0xa9, 0x0f, 0xfd, 0x4b,
+		0xbf, 0x70, 0x8c, 0xe1, 0x53, 0x45, 0x4e, 0x29, 0xf6, 0x1f, 0x64, 0x92,
+		0x07, 0x79, 0x10, 0x78, 0xd5, 0x7f, 0xf2, 0x0e, 0x00, 0x00, 0xff, 0xff,
+		0xcd, 0x92, 0x2f, 0x14, 0x3e, 0x01, 0x00, 0x00,
+	},
+		"favicon.ico",
+	)
+}
+
 func assets_css_bootstrap_theme_css() ([]byte, error) {
 	return bindata_read([]byte{
 		0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x00, 0xff, 0xec, 0x5c,
@@ -17191,6 +17208,7 @@ func AssetNames() []string {
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() ([]byte, error){
 	"index.html": index_html,
+	"favicon.ico": favicon_ico,
 	"assets/css/bootstrap-theme.css": assets_css_bootstrap_theme_css,
 	"assets/css/bootstrap-theme.css.map": assets_css_bootstrap_theme_css_map,
 	"assets/css/bootstrap-theme.min.css": assets_css_bootstrap_theme_min_css,
@@ -17243,10 +17261,12 @@ type _bintree_t struct {
 	Children map[string]*_bintree_t
 }
 var _bintree = &_bintree_t{nil, map[string]*_bintree_t{
-	"index.html": &_bintree_t{index_html, map[string]*_bintree_t{
+	"favicon.ico": &_bintree_t{favicon_ico, map[string]*_bintree_t{
 	}},
 	"assets": &_bintree_t{nil, map[string]*_bintree_t{
 		"css": &_bintree_t{nil, map[string]*_bintree_t{
+			"bootstrap.css.map": &_bintree_t{assets_css_bootstrap_css_map, map[string]*_bintree_t{
+			}},
 			"bootstrap.min.css": &_bintree_t{assets_css_bootstrap_min_css, map[string]*_bintree_t{
 			}},
 			"gn.css": &_bintree_t{assets_css_gn_css, map[string]*_bintree_t{
@@ -17259,18 +17279,18 @@ var _bintree = &_bintree_t{nil, map[string]*_bintree_t{
 			}},
 			"bootstrap.css": &_bintree_t{assets_css_bootstrap_css, map[string]*_bintree_t{
 			}},
-			"bootstrap.css.map": &_bintree_t{assets_css_bootstrap_css_map, map[string]*_bintree_t{
-			}},
 		}},
 		"js": &_bintree_t{nil, map[string]*_bintree_t{
-			"graphite-news.js": &_bintree_t{assets_js_graphite_news_js, map[string]*_bintree_t{
-			}},
-			"jquery-1.11.1.js": &_bintree_t{assets_js_jquery_1_11_1_js, map[string]*_bintree_t{
-			}},
 			"bootstrap.js": &_bintree_t{assets_js_bootstrap_js, map[string]*_bintree_t{
 			}},
 			"bootstrap.min.js": &_bintree_t{assets_js_bootstrap_min_js, map[string]*_bintree_t{
 			}},
+			"graphite-news.js": &_bintree_t{assets_js_graphite_news_js, map[string]*_bintree_t{
+			}},
+			"jquery-1.11.1.js": &_bintree_t{assets_js_jquery_1_11_1_js, map[string]*_bintree_t{
+			}},
 		}},
+	}},
+	"index.html": &_bintree_t{index_html, map[string]*_bintree_t{
 	}},
 }}
