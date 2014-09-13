@@ -21,6 +21,7 @@ Build with (or exists despite the following things being used):
       everything in 1 file for easy deployment)
     * [go-metrics](https://github.com/rcrowley/go-metrics) (of course 
       we keep tabs on our own metrics as well)
+    * Tested on Go 1.3 and tip
  * jQuery
  * Bootstrap
  * [Travis.ci](https://travis-ci.org/ojilles/graphite-news) for running all the unit tests: [![Build Status](https://travis-ci.org/ojilles/graphite-news.svg?branch=master)](https://travis-ci.org/ojilles/graphite-news)
