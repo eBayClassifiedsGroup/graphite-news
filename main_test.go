@@ -21,7 +21,6 @@ func TestGettingAsset(t *testing.T) {
 	}
 }
 
-
 func TestSingleDsIntoState(t *testing.T) {
 	tmp := len(State.Vals)
 	ds1 := Datasource{Name: "some name"}
@@ -84,6 +83,14 @@ func TestParsing(t *testing.T) {
 		{0, "astt"},
 		{0, "launchctl-carbon.stdout:24/08/2014 17:59:53 :: [creates] creating database file / (archive=[(60, 525600), (600, 518400)] xff=None agg=None)"},
 		{1, "13/09/2014 23:10:56 :: [creates] creating database file /opt/graphite/storage/whisper/local/random/diceroll.wsp (archive=[(60, 525600), (600, 518400)] xff=None agg=None)"},
+		{1, "launchctl-carbon.stdout:24/08/2014 17:59:54 :: [creates] creating database file /opt/graphite/storage/whisper/mac-mini_local/collectd/df-Volumes-Recovery_HD/df_complex-reserved.wsp (archive=[(60, 525600), (600, 518400)] xff=None agg=None)"},
+		{1, "launchctl-carbon.stdout:24/08/2014 17:59:54 :: [creates] creating database file /opt/graphite/storage/whisper/mac-mini_local/collectd/df-Volumes-Recovery_HD/df_complex-used.wsp (archive=[(60, 525600), (600, 518400)] xff=None agg=None)"},
+		{1, "launchctl-carbon.stdout:24/08/2014 20:59:54 :: [creates] creating database file /opt/graphite/storage/whisper/mac-mini_local/collectd/df-Volumes-Media/df_complex-free.wsp (archive=[(60, 525600), (600, 518400)] xff=None agg=None)"},
+		{1, "launchctl-carbon.stdout:24/08/2014 20:59:54 :: [creates] creating database file /opt/graphite/storage/whisper/mac-mini_local/collectd/df-Volumes-Media/df_complex-reserved.wsp (archive=[(60, 525600), (600, 518400)] xff=None agg=None)"},
+		{1, "launchctl-carbon.stdout:24/08/2014 20:59:54 :: [creates] creating database file /opt/graphite/storage/whisper/mac-mini_local/collectd/df-Volumes-Media/df_complex-used.wsp (archive=[(60, 525600), (600, 518400)] xff=None agg=None)"},
+		{1, "launchctl-carbon.stdout:24/08/2014 23:10:40 :: [creates] creating database file /opt/graphite/storage/whisper/mac-mini_local/collectd/curl_xml-default/gauge-tvseries_watched-Babylon_5.wsp (archive=[(60, 525600), (600, 518400)] xff=None agg=None)"},
+		{1, "launchctl-carbon.stdout:24/08/2014 23:10:40 :: [creates] creating database file /opt/graphite/storage/whisper/mac-mini_local/collectd/curl_xml-default/gauge-tvseries_total-Babylon_5.wsp (archive=[(60, 525600), (600, 518400)] xff=None agg=None)"},
+		{0, "launchctl-carbon.stdout:24/08/2014 23:10:40 :: [creates] creating database file /opt/graphite/storage/whisper/mac-mini_local/collectd/curl_xml-default/.wsp (archive=[(60, 525600), (600, 518400)] xff=None agg=None)"},
 	}
 	State.Vals = nil // start fresh
 	prev_count := len(State.Vals)
@@ -92,7 +99,7 @@ func TestParsing(t *testing.T) {
 		parseLine(test.line)
 
 		if len(State.Vals) != prev_count+test.incr {
-			t.Fatal(fmt.Sprintf("Parsed line, should have seen %v new entries, saw %v. Line: %v", test.incr, len(State.Vals)-prev_count, test.line))
+			t.Fatal(fmt.Sprintf("Parsed line, should have seen %v new entries, saw %v. Line: %v", test.incr, len(State.Vals)-prev_count, test))
 		}
 		prev_count = len(State.Vals)
 
@@ -101,6 +108,9 @@ func TestParsing(t *testing.T) {
 		// Do any checking on the actual values for the data source (not complete yet)
 		if last_ds.Create_date.IsZero() {
 			t.Fatal(fmt.Sprintf("Data source has invalid Create_date: %+v", last_ds))
+		}
+		if len(last_ds.Name) < 1 {
+			t.Fatal(fmt.Sprintf("Data source doesnt have proper Name: %+v", last_ds))
 		}
 	}
 }

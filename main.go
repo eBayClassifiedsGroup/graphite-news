@@ -122,9 +122,15 @@ func addItemToState(ds Datasource) {
 	l := log.New(os.Stdout, "tail	", myLogFormat)
 	m_ds := metrics.GetOrRegisterCounter("tail/datasources", metrics.DefaultRegistry)
 
+	if strings.HasSuffix(ds.Name, ".") {
+		return
+	}
+
 	// Find out if we already have one with the same name, if
 	// so skip it.
 	State.RLock()
+
+	// TODO: change to range
 	for i := 0; i < len(State.Vals) && !foundDuplicate; i++ {
 		if ds.Name == State.Vals[i].Name {
 			foundDuplicate = true
