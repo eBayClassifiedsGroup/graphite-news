@@ -15,6 +15,7 @@ import (
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/rcrowley/go-metrics"
 	"log"
+	"path/filepath"
 	"net/http"
 	"os"
 	"regexp"
@@ -50,8 +51,7 @@ func (i *loglocslice) String() string {
 
 // The second method is Set(value string) error
 func (i *loglocslice) Set(value string) error {
-	fmt.Printf("value Set(): %s\n", value)
-	*i = append(*i, value)
+	*i = AppendIfMissing(*i, value)
 	return nil
 }
 
@@ -196,15 +196,41 @@ func tailLogfile(c chan string, file string) {
 }
 
 func tailLogfiles(c chan string) {
+	var files []string;
+
+	// loop through the configured locations, and do filesystem
+	// globbing, building up a new list. There is probably a special
+	// place in POSIX-hell for me :-)
 	for _, file := range C.logfileLocation {
+		matches, _ := filepath.Glob(file)
+		for _, match := range matches {
+			files = AppendIfMissing(files, match)
+		}
+	}
+	for _, file := range files {
 		go tailLogfile(c, file)
 	}
+}
+
+func AppendIfMissing(slice []string, i string) []string {
+    for _, ele := range slice {
+        if ele == i {
+            return slice
+        }
+    }
+    return append(slice, i)
 }
 
 func main() {
 	error_channel := make(chan string)
 	l := log.New(os.Stdout, "main	", myLogFormat)
 	flag.Parse()
+
+	// grab any remaining arguments and pretend they belong
+	// to -l :-) (Also solves the -l * case for example)
+	for _, argument := range flag.Args() {
+		C.logfileLocation = AppendIfMissing(C.logfileLocation, argument)
+	}
 
 	// Set up metrics registry
 	//	go metrics.Log(
