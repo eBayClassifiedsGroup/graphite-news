@@ -73,6 +73,11 @@ gn.updateDs = function() {
           })
 	  // on click, add a row underneath with the graph(s)
           .click(function() {
+            // If we have a .timeseries row underneath us, all we need
+            // to do is remove them and we're done (allows for click, click once more
+            // behaviour on normal ds td's)
+		// TODO, don't know how to do yet!
+
             // find any and all tr's with class timeseries and remove them (want to keep UI
             // simple for now and only have one open at a time
             $('#cart .timeseries').remove();
