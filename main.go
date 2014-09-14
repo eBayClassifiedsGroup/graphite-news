@@ -38,10 +38,22 @@ type configuration struct {
 	JsonPullInterval int
 	GraphiteURL      string
 	ServerPort       int
-	logfileLocation  string
+	logfileLocation  loglocslice
 }
 
-const myLogFormat = log.Ldate | log.Ltime
+// used for parsing Flags input params
+type loglocslice []string
+
+func (i *loglocslice) String() string {
+	return fmt.Sprintf("%v", *i)
+}
+
+// The second method is Set(value string) error
+func (i *loglocslice) Set(value string) error {
+	fmt.Printf("value Set(): %s\n", value)
+	*i = append(*i, value)
+	return nil
+}
 
 // declare a globally scoped State variable, otherwise
 // the request handlers can't get to it. If there is a better
@@ -49,6 +61,7 @@ const myLogFormat = log.Ldate | log.Ltime
 var State = &state{&sync.RWMutex{}, []Datasource{}}
 
 const maxState int = 100
+const myLogFormat = log.Ldate | log.Ltime
 
 // Instantiate struct to hold our configuration
 var C = configuration{JsonPullInterval: 5000}
@@ -56,8 +69,13 @@ var C = configuration{JsonPullInterval: 5000}
 func init() {
 	flag.IntVar(&C.JsonPullInterval, "i", 5000, "Number of [ms] interval for Web UI's to update themselves. Clients only update their config every 5min")
 	flag.IntVar(&C.ServerPort, "p", 2934, "Port number the webserver will bind to (pick a free one please)")
-	flag.StringVar(&C.logfileLocation, "l", "creates.log", "Location of the Carbon logfiles we need to tail")
 	flag.StringVar(&C.GraphiteURL, "s", "http://localhost:8080", "URL of the Graphite render API, no trailing slash. Apple rendezvous domains do not work (like http://machine.local, use IPs in that case)")
+	flag.Var(&C.logfileLocation, "l", "One or more locations of the Carbon logfiles we need to tail. (F.ex. -l file1 -l file2 -l *.log)")
+
+	flag.Usage = func() {
+		fmt.Printf("Usage: graphite-news [-i sec] [-p port] [-s graphite url] -l logfile \n\n")
+		flag.PrintDefaults()
+	}
 }
 
 func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
@@ -164,15 +182,23 @@ func parseLine(line string) {
 
 }
 
-func tailLogfile(c chan string) {
-
-	t, err := tail.TailFile(C.logfileLocation, tail.Config{Follow: true, ReOpen: true, MustExist: true})
+func tailLogfile(c chan string, file string) {
+	l := log.New(os.Stdout, "main	", myLogFormat)
+	tc := tail.Config{Follow: true, ReOpen: true, MustExist: true}
+	t, err := tail.TailFile(file, tc)
 	if err == nil {
+		l.Print(fmt.Sprintf("Tailing File:[%s]\n", file))
 		for line := range t.Lines {
 			parseLine(line.Text)
 		}
 	}
 	c <- fmt.Sprintf("%s", err)
+}
+
+func tailLogfiles(c chan string) {
+	for _, file := range C.logfileLocation {
+		go tailLogfile(c, file)
+	}
 }
 
 func main() {
@@ -198,7 +224,7 @@ func main() {
 			&assetfs.AssetFS{Asset, AssetDir, ""}))
 
 	go http.ListenAndServe(fmt.Sprintf(":%v", C.ServerPort), nil)
-	go tailLogfile(error_channel)
+	go tailLogfiles(error_channel)
 
 	l.Println("Graphite News -- Showing which new metrics are available since 2014\n")
 	l.Println(fmt.Sprintf("Graphite News -- http://localhost:%v		:: Main User Interface", C.ServerPort))
