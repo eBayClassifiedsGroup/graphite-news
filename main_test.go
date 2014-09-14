@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 )
 
@@ -23,21 +21,6 @@ func TestGettingAsset(t *testing.T) {
 	}
 }
 
-func TestHTTPServingAssets(t *testing.T) {
-	handler := func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, "something failed", http.StatusInternalServerError)
-	}
-
-	req, err := http.NewRequest("GET", "http://www.google.com", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	w := httptest.NewRecorder()
-	handler(w, req)
-
-	t.Fatal(fmt.Sprintf("%+v", w))
-}
 
 func TestSingleDsIntoState(t *testing.T) {
 	tmp := len(State.Vals)
