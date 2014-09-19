@@ -3,7 +3,7 @@ package main
 // Implements a server that tails Graphite's logs
 // finds out when new data sources become available
 // and serves out a UI that lets you see/render those
-// continiously.
+// continuously.
 
 // Written by J.A. Oldenbeuving / ojilles@gmail.com
 
