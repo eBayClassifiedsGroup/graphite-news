@@ -42,14 +42,17 @@ actually want to operate this piece of software.) If you have recently created n
 This should get you a `graphite-news` binary in `$GOPATH/bin`. Getting help gives you:
 
     $ graphite-news -h
-    Usage of graphite-news:
 
-      -i=5000: Number of [ms] interval for Web UI's to update themselves. Clients only update 
-         their config every 5min
-      -l="creates.log": Location of the Carbon logfiles we need to tail
+    Usage: graphite-news [-i sec] [-p port] [-s graphite url] -l logfile
+
+      -i=5000: Number of [ms] interval for Web UI's to update themselves. Clients only update
+               their config every 5min
+      -l=[]: One or more locations of the Carbon logfiles we need to tail.
+             (F.ex. -l file1 -l file2 -l *.log)
       -p=2934: Port number the webserver will bind to (pick a free one please)
-      -s="http://localhost:8080": URL of the Graphite render API, no trailing slash. Apple 
-         rendezvous domains do not work (like http://machine.local, use IPs in that case)
+      -s="http://localhost:8080": URL of the Graphite render API, no trailing
+             slash. Apple rendezvous domains do not work (like http://machine.local, use
+             IPs in that case)
 
 The two important ones are the input (`-l` should point to the carbon logfile,
 or whatever is storing the standard output of the carbon deamon) and the output
