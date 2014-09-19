@@ -12,7 +12,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ActiveState/tail"
-	"github.com/elazarl/go-bindata-assetfs"
+	"github.com/cespare/go-apachelog"
 	"github.com/rcrowley/go-metrics"
 	"log"
 	"net/http"
@@ -94,13 +94,10 @@ func init() {
 
 func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		l := log.New(os.Stdout, "http	", myLogFormat)
-
 		m := metrics.GetOrRegisterTimer(fmt.Sprintf("%s%s", r.Method, r.URL.Path), metrics.DefaultRegistry)
 		m.Time(func() {
 			fn(w, r)
 		})
-		l.Printf("Request: %v %v %v", r.Method, r.URL, r.RemoteAddr)
 	}
 }
 
@@ -136,6 +133,11 @@ func frontpageHandler(w http.ResponseWriter, r *http.Request) {
 		data = []byte("<b>Fatal Error</b>: index.html file not found.")
 	}
 	w.Write(data)
+}
+
+func staticHandler(w http.ResponseWriter, r *http.Request) {
+	tmp, _ := Asset(r.RequestURI[1:])
+	w.Write(tmp)
 }
 
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
@@ -253,17 +255,21 @@ func main() {
 	//		log.New(os.Stdout, "metrics	", myLogFormat))
 
 	// Set up web handlers in goroutines
-	http.HandleFunc("/", makeHandler(frontpageHandler))
-	http.HandleFunc("/json/", makeHandler(jsonHandler))
-	http.HandleFunc("/stats/", makeHandler(statsHandler))
-	http.HandleFunc("/config/", makeHandler(configHandler))
-	http.HandleFunc("/favicon.ico", makeHandler(faviconHandler))
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", makeHandler(frontpageHandler))
+	mux.HandleFunc("/json/", makeHandler(jsonHandler))
+	mux.HandleFunc("/stats/", makeHandler(statsHandler))
+	mux.HandleFunc("/config/", makeHandler(configHandler))
+	mux.HandleFunc("/favicon.ico", makeHandler(faviconHandler))
+	mux.HandleFunc("/assets/", makeHandler(staticHandler))
+	loggingHandler := apachelog.NewHandler(mux, os.Stdout)
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%v", C.ServerPort),
+		Handler: loggingHandler,
+	}
 
-	http.Handle("/assets/",
-		http.FileServer(
-			&assetfs.AssetFS{Asset, AssetDir, ""}))
+	go server.ListenAndServe()
 
-	go http.ListenAndServe(fmt.Sprintf(":%v", C.ServerPort), nil)
 	go tailLogfiles(error_channel)
 
 	l.Println("Graphite News -- Showing which new metrics are available since 2014\n")
