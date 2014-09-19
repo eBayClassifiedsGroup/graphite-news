@@ -15,56 +15,70 @@ import (
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/rcrowley/go-metrics"
 	"log"
-	"path/filepath"
 	"net/http"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
 	"time"
 )
 
-type Datasource struct {
-	Name        string
-	Create_date time.Time
-	Params      string
-}
+type (
 
-type state struct {
-	*sync.RWMutex // inherits locking methods
-	Vals          []Datasource
-}
+	// Structure of a single data source. Anything in capitals will
+	// get marshalled over to any connecting browser
+	Datasource struct {
+		Name        string
+		Create_date time.Time
+		Params      string
+	}
 
-type configuration struct {
-	JsonPullInterval int
-	GraphiteURL      string
-	ServerPort       int
-	logfileLocation  loglocslice
-}
+	// Holds the state (all newly detected data sources)
+	state struct {
+		*sync.RWMutex // inherits locking methods
+		Vals          []Datasource
+	}
 
-// used for parsing Flags input params
-type loglocslice []string
+	// Holds all configuration items for main. Anything with a capital
+	// will get marshalled towards any browsers connecting
+	configuration struct {
+		JsonPullInterval int
+		GraphiteURL      string
+		ServerPort       int
+		logfileLocation  loglocslice
+	}
+
+	// used for parsing Flags input params
+	loglocslice []string
+)
+
+var (
+	// declare a globally scoped State variable, otherwise
+	// the request handlers can't get to it. If there is a better
+	// way to do this, plmk.
+	State = &state{&sync.RWMutex{}, []Datasource{}}
+
+	// Instantiate struct to hold our configuration
+	C = configuration{JsonPullInterval: 5000}
+)
+
+const (
+	// Maximum number of data sources to hold in memory before
+	// pruning out as new ones come in
+	maxState    int = 100
+	myLogFormat     = log.Ldate | log.Ltime
+)
 
 func (i *loglocslice) String() string {
 	return fmt.Sprintf("%v", *i)
 }
 
-// The second method is Set(value string) error
+// Used to do Flag parsing of unbounded number of input logfiles
 func (i *loglocslice) Set(value string) error {
 	*i = AppendIfMissing(*i, value)
 	return nil
 }
-
-// declare a globally scoped State variable, otherwise
-// the request handlers can't get to it. If there is a better
-// way to do this, plmk.
-var State = &state{&sync.RWMutex{}, []Datasource{}}
-
-const maxState int = 100
-const myLogFormat = log.Ldate | log.Ltime
-
-// Instantiate struct to hold our configuration
-var C = configuration{JsonPullInterval: 5000}
 
 func init() {
 	flag.IntVar(&C.JsonPullInterval, "i", 5000, "Number of [ms] interval for Web UI's to update themselves. Clients only update their config every 5min")
@@ -196,7 +210,7 @@ func tailLogfile(c chan string, file string) {
 }
 
 func tailLogfiles(c chan string) {
-	var files []string;
+	var files []string
 
 	// loop through the configured locations, and do filesystem
 	// globbing, building up a new list. There is probably a special
@@ -213,12 +227,12 @@ func tailLogfiles(c chan string) {
 }
 
 func AppendIfMissing(slice []string, i string) []string {
-    for _, ele := range slice {
-        if ele == i {
-            return slice
-        }
-    }
-    return append(slice, i)
+	for _, ele := range slice {
+		if ele == i {
+			return slice
+		}
+	}
+	return append(slice, i)
 }
 
 func main() {
