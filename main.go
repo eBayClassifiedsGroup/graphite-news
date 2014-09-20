@@ -118,9 +118,13 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 		}
 
 		metricName := fmt.Sprintf("%s.%s", r.Method, metricUrl)
+		aggMetricName := fmt.Sprintf("%s.__all_reqs", r.Method)
 		m := metrics.GetOrRegisterTimer(metricName, metrics.DefaultRegistry)
-		m.Time(func() {
-			fn(w, r)
+		mGet := metrics.GetOrRegisterTimer(aggMetricName, metrics.DefaultRegistry)
+		mGet.Time(func() {
+			m.Time(func() {
+				fn(w, r)
+			})
 		})
 	}
 }

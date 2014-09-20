@@ -118,6 +118,11 @@ Couple of notes:
  * All timing metrics are expressed as nanoseconds. To get back to the more
    often used milliseconds in the web-domain, scale by 0.000001. For example:
    `sortByName(cactiStyle(scale(graphite-news.metrics.GET.{json}.*-percentile,0.000001),"si"))`
+ * All requests that are not 4xx/5xx responses are getting tracked by their
+   URL. General structure is to have the `HTTP Method` (e.g. `GET`), followed
+   by the URL, followed by the various metrics.
+ * All requests also get aggregated on the just the `HTTP Method`, followed by
+   `__all_reqs` for easier top-level view. (F.ex.: `GET.__all_reqs.count`)
  * `tail.input_lines.count` and `tail.datasources.count` will let you know how
    many log-lines have been parsed and how many data sources have been found
    respectively. Here is an example graph to illustrate:
