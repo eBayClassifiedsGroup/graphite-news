@@ -15,6 +15,7 @@ import (
 	"github.com/cespare/go-apachelog"
 	"github.com/rcrowley/go-metrics"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -47,6 +48,13 @@ type (
 		GraphiteURL      string
 		ServerPort       int
 		logfileLocation  loglocslice
+
+		// These are used for reporting Graphite-news' own
+		// stats to a Graphite server. If that server is being monitored
+		// by Graphite-news, you've recreated Inception!
+		reporterGraphiteEnabled bool
+		reporterGraphiteHost    string
+		reporterGraphitePrep    string
 	}
 
 	// used for parsing Flags input params
@@ -87,16 +95,30 @@ func init() {
 	flag.IntVar(&C.ServerPort, "p", 2934, "Port number the webserver will bind to (pick a free one please)")
 	flag.StringVar(&C.GraphiteURL, "s", "http://localhost:8080", "URL of the Graphite render API, no trailing slash. Apple rendezvous domains do not work (like http://machine.local, use IPs in that case)")
 	flag.Var(&C.logfileLocation, "l", "One or more locations of the Carbon logfiles we need to tail. (F.ex. -l file1 -l file2 -l *.log)")
+	flag.BoolVar(&C.reporterGraphiteEnabled, "r", false, "If set, report our own statistics every minute to a graphite host")
+	flag.StringVar(&C.reporterGraphiteHost, "rh", "localhost:2003", "Change the graphite host for pushing metrics towards")
+	flag.StringVar(&C.reporterGraphitePrep, "rp", "graphite-news.metrics", "Prepend all metric names with this string")
 
 	flag.Usage = func() {
-		fmt.Printf("Usage: graphite-news [-i sec] [-p port] [-s graphite url] -l logfile \n\n")
+		fmt.Printf("Usage: graphite-news [-i sec] [-p port] [-s graphite url] [-r] -l logfile \n\n")
 		flag.PrintDefaults()
 	}
 }
 
 func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		m := metrics.GetOrRegisterTimer(fmt.Sprintf("%s%s", r.Method, r.URL.Path), metrics.DefaultRegistry)
+		// For metric names, escape any natural dots in the name,
+		// then replace any URL slashes with a dot (seems same semantics to me)
+		// and make sure we dont have any starting or ending with a dot.
+		metricUrl := strings.Replace(r.URL.Path, ".", "_", -1)
+		metricUrl = strings.Replace(metricUrl, "/", ".", -1)
+		metricUrl = strings.Trim(metricUrl, ".")
+		if len(metricUrl) == 0 {
+			metricUrl = "index_html"
+		}
+
+		metricName := fmt.Sprintf("%s.%s", r.Method, metricUrl)
+		m := metrics.GetOrRegisterTimer(metricName, metrics.DefaultRegistry)
 		m.Time(func() {
 			fn(w, r)
 		})
@@ -182,7 +204,7 @@ func parseTime(s string) time.Time {
 func addItemToState(ds Datasource) {
 	var foundDuplicate = false
 	l := log.New(os.Stdout, "tail	", myLogFormat)
-	m_ds := metrics.GetOrRegisterCounter("tail/datasources", metrics.DefaultRegistry)
+	m_ds := metrics.GetOrRegisterCounter("tail.datasources", metrics.DefaultRegistry)
 
 	if strings.HasSuffix(ds.Name, ".") {
 		return
@@ -214,7 +236,7 @@ func addItemToState(ds Datasource) {
 }
 
 func parseLine(line string) {
-	m_lines := metrics.GetOrRegisterCounter("tail/input_lines", metrics.DefaultRegistry)
+	m_lines := metrics.GetOrRegisterCounter("tail.input_lines", metrics.DefaultRegistry)
 	var dataPath = regexp.MustCompile(`[a-zA-Z\:]*([0-9].*) :: \[creates\] creating database file .*/whisper/(.*)\.wsp (.*)`)
 	m_lines.Inc(1)
 	match := dataPath.FindStringSubmatch(line)
@@ -265,6 +287,14 @@ func AppendIfMissing(slice []string, i string) []string {
 	return append(slice, i)
 }
 
+func reportMetrics() {
+	// Set up metrics registry
+	if C.reporterGraphiteEnabled {
+		addr, _ := net.ResolveTCPAddr("tcp", C.reporterGraphiteHost)
+		go metrics.Graphite(metrics.DefaultRegistry, 60e9, C.reporterGraphitePrep, addr)
+	}
+}
+
 func main() {
 	error_channel := make(chan string)
 	l := log.New(os.Stdout, "main	", myLogFormat)
@@ -275,12 +305,6 @@ func main() {
 	for _, argument := range flag.Args() {
 		C.logfileLocation = AppendIfMissing(C.logfileLocation, argument)
 	}
-
-	// Set up metrics registry
-	//	go metrics.Log(
-	//		metrics.DefaultRegistry,
-	//		5e9, // Xe9 -> X seconds
-	//		log.New(os.Stdout, "metrics	", myLogFormat))
 
 	// Set up web handlers in goroutines
 	mux := http.NewServeMux()
@@ -301,8 +325,8 @@ func main() {
 	}
 
 	go server.ListenAndServe()
-
 	go tailLogfiles(error_channel)
+	go reportMetrics()
 
 	l.Println("Graphite News -- Showing which new metrics are available since 2014\n")
 	l.Println(fmt.Sprintf("Graphite News -- http://localhost:%v		:: Main User Interface", C.ServerPort))
