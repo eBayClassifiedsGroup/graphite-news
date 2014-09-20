@@ -43,15 +43,18 @@ This should get you a `graphite-news` binary in `$GOPATH/bin`. Getting help give
 
     $ graphite-news -h
 
-    Usage: graphite-news [-i sec] [-p port] [-s graphite url] -l logfile
-
-      -i=5000: Number of [ms] interval for Web UI's to update themselves. Clients only update
+    Usage: graphite-news [-i sec] [-p port] [-s graphite url] [-r] -l logfile
+    
+      -i=5000: Number of [ms] interval for Web UI's to update themselves. Clients only update 
                their config every 5min
-      -l=[]: One or more locations of the Carbon logfiles we need to tail.
+      -l=[]: One or more locations of the Carbon logfiles we need to tail. 
              (F.ex. -l file1 -l file2 -l *.log)
       -p=2934: Port number the webserver will bind to (pick a free one please)
-      -s="http://localhost:8080": URL of the Graphite render API, no trailing
-             slash. Apple rendezvous domains do not work (like http://machine.local, use
+      -r=false: If set, report our own statistics every minute to a graphite host
+      -rh="localhost:2003": Change the graphite host for pushing metrics towards
+      -rp="graphite-news.metrics": Prepend all metric names with this string
+      -s="http://localhost:8080": URL of the Graphite render API, no trailing 
+             slash. Apple rendezvous domains do not work (like http://machine.local, use 
              IPs in that case)
 
 The two important ones are the input (`-l` should point to the carbon logfile,
@@ -62,8 +65,18 @@ or whatever is storing the standard output of the carbon deamon) and the output
 
 Currently `-l` does not allow for globbing or multiple files in general.
 
-Usage
------
+Reporting statistics to Graphite
+--------------------------------
+The go server process collects metrics about itself as well. These can be
+reported back to graphite by using the `-r` flag, which is by default off. Once
+enabled it will report all metrics to your Grahite server, by default located
+at `localhost:2003` but can be overridden by using the `-rh` flag. Metrics by
+default will be reported under `graphite-news.metrics` at the top root, which
+can be altered by using the `-rp` flag. Most likely, this will incite an
+Inception-level experience to the operator once he views the Webinterface.
+
+Usage of Webinterface
+---------------------
 After starting `graphite-news`, it will tail through your logfile in search for
 notifications that new data sources have been created and store those in
 memory. If you point a browser to it (default port 2934, configurable through
