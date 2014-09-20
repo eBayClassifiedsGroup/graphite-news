@@ -99,5 +99,5 @@ Regenerating `bindata.go` can be done with the provided `build-dst.sh` script.
 This will result with all fresh assets in the binary (able to just `scp` to
 another machine for example).  Effectively, `build-dst.sh` only does:
 
-`go-bindata -ignore=\\.swp$ index.html favicon.ico assets/...`
+`go-bindata -ignore=\\.swp$ assets/...`
 

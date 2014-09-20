@@ -15,9 +15,10 @@ func BenchmarkHello(b *testing.B) {
 // All state is not reset
 
 func TestGettingAsset(t *testing.T) {
-	data, _ := Asset("index.html")
+	file := fmt.Sprintf("%vindex.html", staticAssetsURL)[1:]
+	data, _ := Asset(file)
 	if len(data) == 0 {
-		t.Fatal("Could not load static asset index.html")
+		t.Fatal(fmt.Sprintf("Could not load static asset: %v", file))
 	}
 }
 

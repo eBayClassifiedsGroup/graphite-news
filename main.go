@@ -68,6 +68,8 @@ const (
 	// pruning out as new ones come in
 	maxState    int = 100
 	myLogFormat     = log.Ldate | log.Ltime
+
+	staticAssetsURL = "/assets/"
 )
 
 func (i *loglocslice) String() string {
@@ -121,28 +123,54 @@ func statsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func configHandler(w http.ResponseWriter, r *http.Request) {
-	js, _ := json.Marshal(C)
+	js, err := json.Marshal(C)
+	if err != nil || len(js) < 1 {
+		errorHandler(w, r, http.StatusNotFound)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
 
 func frontpageHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	data, _ := Asset("index.html")
-	if len(data) == 0 {
-		data = []byte("<b>Fatal Error</b>: index.html file not found.")
+	data, err := Asset("assets/index.html")
+	if err != nil || len(data) == 0 || r.URL.String() != "/" {
+		errorHandler(w, r, http.StatusNotFound)
+		return
 	}
 	w.Write(data)
 }
 
 func staticHandler(w http.ResponseWriter, r *http.Request) {
-	tmp, _ := Asset(r.RequestURI[1:])
+	// URLs come in like "/assets/js/xxx", then get transformed to
+	//                   "assets/static/js/xxx"
+	// E.g. skip leading slash, inject static, where /assets/ is a constant
+	filePath := fmt.Sprintf("%vstatic/%v",
+		staticAssetsURL,
+		r.RequestURI[len(staticAssetsURL):])[1:]
+	tmp, err := Asset(filePath)
+	if err != nil || len(tmp) == 0 {
+		errorHandler(w, r, http.StatusNotFound)
+		return
+	}
 	w.Write(tmp)
 }
 
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
-	data, _ := Asset("favicon.ico")
+	data, err := Asset("assets/favicon.ico")
+	if err != nil {
+		errorHandler(w, r, http.StatusNotFound)
+		return
+	}
 	w.Write(data)
+}
+
+func errorHandler(w http.ResponseWriter, r *http.Request, status int) {
+	w.WriteHeader(status)
+	if status == http.StatusNotFound {
+		fmt.Fprint(w, "<b>404</b>: Not Found")
+	}
 }
 
 func parseTime(s string) time.Time {
@@ -256,12 +284,16 @@ func main() {
 
 	// Set up web handlers in goroutines
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", makeHandler(frontpageHandler))
 	mux.HandleFunc("/json/", makeHandler(jsonHandler))
 	mux.HandleFunc("/stats/", makeHandler(statsHandler))
 	mux.HandleFunc("/config/", makeHandler(configHandler))
+
+	// These are all handled by the compiled in Assets
+	mux.HandleFunc("/", makeHandler(frontpageHandler))
 	mux.HandleFunc("/favicon.ico", makeHandler(faviconHandler))
-	mux.HandleFunc("/assets/", makeHandler(staticHandler))
+	mux.HandleFunc(staticAssetsURL, makeHandler(staticHandler))
+
+	// Add the logging handler for Apache Common-ish log output
 	loggingHandler := apachelog.NewHandler(mux, os.Stdout)
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%v", C.ServerPort),
