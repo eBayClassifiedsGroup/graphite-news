@@ -29,13 +29,36 @@ function template(row, dss) {
   return row;
 }
 
-gn.GraphiteImg = function(dsname, dsdate, width) {
-	if (width < 50) { width = 800 /* some default */ }
+function endsWith(str, suffix) {
+	    return str.indexOf(suffix, str.length - suffix.length) !== -1;
+}
+
+gn.GraphiteImg = function(dsname, dsdate, width, derivative, editlink) {
+	// If derivative is 'true', encapsulate the DS with a derivative function
+	// in graphite. If none is given, determine if DS ends in '.*count', in 
+	// which case we'll turn it on anyways.
+	if (derivative === undefined) {
+		if (endsWith(dsname, ".count")) {
+			derivative = true
+		} else {
+			derivative = false
+		}
+	} else {
+		derivative = false
+	}
+	
+	if ((width < 50) || (width === undefined)) { width = 800 /* some default */ }
+	if (editlink === undefined) { editlink = false }
+	if (!editlink) { render = "render/" } else { render = "" }
+
 	tmp = "";
 	tmp = tmp + gn.GraphiteURL
-	tmp = tmp + "/render/?width=" +Math.floor(width)
+	tmp = tmp + "/" + render + "?width=" +Math.floor(width)
 	tmp = tmp + "&target=cactiStyle("
-	tmp = tmp + escape(dsname)+ ",'si')"
+	if(derivative) { tmp = tmp + "perSecond(" }
+	tmp = tmp + escape(dsname)
+	if(derivative) { tmp = tmp + ")" }
+	tmp = tmp + ",'si')"
 	tmp = tmp + "&lineMode=connected"
 
 	return tmp
@@ -87,11 +110,21 @@ gn.updateDs = function() {
               .removeClass('templateds')
               .addClass('timeseries');
             tmp.find('td:first')
-              .html("<img src=\""+
+              .html(
+		"<div class='timeseriescontainer'>"
+		+"  <img class='img-rounded' src=\""+
                 gn.GraphiteImg(
                   $(this).find("td:first").text(),
                   "none",
-                  Math.floor($(this).width() * 0.9))+"\">")
+                  Math.floor($(this).width() * 0.9))+"\">"
+		+ '<span class="tsbtntoolbar">'
+		+ '  <div class="btn-group btn-group-sm">'
+		+ '    <a href="'+gn.GraphiteImg($(this).find("td:first").text(),"none",undefined,undefined,true)+'" type="button" class="btn btn-default">Edit</button>'
+		+ '    <a href="" type="button" class="btn btn-default disabled">Remove</button>'
+		+ '  <div>'
+		+ '</span>'
+		+ '</div>'
+		)
               .end()
               .click( function(){ $(this).remove() })
               .insertAfter('#cart .gnhover').fadeIn();

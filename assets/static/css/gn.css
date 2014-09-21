@@ -14,3 +14,14 @@
   background-color: #EEEEEE;
   text-align: center;
 }
+
+.timeseriescontainer {
+	position: relative;
+	width: 100%; /* IE6 */
+}
+
+.tsbtntoolbar {
+	position: absolute;
+	top: 25px;
+	left: 125px;
+}
