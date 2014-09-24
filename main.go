@@ -218,9 +218,8 @@ func addItemToState(ds Datasource) {
 	// so skip it.
 	State.RLock()
 
-	// TODO: change to range
-	for i := 0; i < len(State.Vals) && !foundDuplicate; i++ {
-		if ds.Name == State.Vals[i].Name {
+	for _, item := range State.Vals {
+		if !foundDuplicate && ds.Name == item.Name {
 			foundDuplicate = true
 		}
 	}
