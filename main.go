@@ -224,6 +224,9 @@ func addItemToState(ds Datasource) {
 			foundDuplicate = true
 		}
 	}
+
+	// Can not defer this one, as it would prevent any write lock below from
+	// getting aqcuired succesfully (race cond.)
 	State.RUnlock()
 
 	if !foundDuplicate {
@@ -231,11 +234,13 @@ func addItemToState(ds Datasource) {
 		State.Lock()
 		defer State.Unlock()
 		State.Vals = append(State.Vals, ds)
-		defer m_ds.Inc(1)
+
 		if len(State.Vals) > maxState {
-			State.Vals = State.Vals[len(State.Vals)-maxState : maxState]
+			State.Vals = State.Vals[len(State.Vals)-maxState : len(State.Vals)]
 		}
+
 		l.Printf("New datasource: %+v (total: %v)", ds.Name, len(State.Vals))
+		defer m_ds.Inc(1)
 	}
 }
 

@@ -53,16 +53,19 @@ func TestDontStoreMoreThan1k(t *testing.T) {
 	const testString string = "TestDontStoreMoreThanMaxState, item: "
 
 	ds := Datasource{Name: "tmp"}
-	for i := 0; i < maxState+11; i++ {
+	for i := 1; i < maxState+11; i++ {
 		ds.Name = fmt.Sprintf("%v %v", testString, i)
 		addItemToState(ds)
 	}
 	if len(State.Vals) > maxState {
 		t.Fatal("Able to add more than maxState items into State.Vals")
 	}
+	if len(State.Vals) < maxState-10 {
+		t.Fatal("Too few items in State (e.g. got reset somewhere in the middle?)")
+	}
 
-	// At this point the last item should be maxState+10-1 (0 indexed, remember)
-	knownName := fmt.Sprintf("%v %v", testString, maxState+10-1)
+	// At this point the last item should be maxState+10
+	knownName := fmt.Sprintf("%v %v", testString, maxState+10)
 	lastItem := State.Vals[len(State.Vals)-1:]
 	if lastItem[0].Name != knownName {
 		t.Fatal(fmt.Sprintf("The expected last item (after adding more then maxState items) was [%v] but actually found [%v]!", knownName, lastItem[0].Name))
