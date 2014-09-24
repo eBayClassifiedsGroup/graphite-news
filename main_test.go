@@ -64,11 +64,9 @@ func TestDontStoreMoreThan1k(t *testing.T) {
 		t.Fatal("Too few items in State (e.g. got reset somewhere in the middle?)")
 	}
 
-	// At this point the last item should be maxState+10
-	knownName := fmt.Sprintf("%v %v", testString, maxState+10)
-	lastItem := State.Vals[len(State.Vals)-1:]
-	if lastItem[0].Name != knownName {
-		t.Fatal(fmt.Sprintf("The expected last item (after adding more then maxState items) was [%v] but actually found [%v]!", knownName, lastItem[0].Name))
+	lastItem := State.Vals[len(State.Vals)-1:][0]
+	if lastItem.Name != ds.Name {
+		t.Fatal(fmt.Sprintf("The expected last item (after adding more then maxState items) was [%v] but actually found [%v]!", ds.Name, lastItem.Name))
 	}
 }
 
