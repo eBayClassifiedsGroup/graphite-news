@@ -175,7 +175,7 @@ func deleteFile(dsName string) (err bool) {
 	}
 
 	if _, err := os.Stat(dsName); os.IsNotExist(err) {
-		l.Printf("DELETE called but no such file or directory: %s", dsName)
+		l.Printf("DELETE called but no such file: %s", dsName)
 		return true
 	}
 
@@ -310,11 +310,8 @@ func deleteDSbyName(dsName string) bool {
 	for i, ds_tmp := range State.Vals {
 		if ds_tmp.Name == dsName {
 			fmt.Println(i)
-			tmp := State.Vals[:i]
-			for j := i + 1; i < len(State.Vals[j:]); j++ {
-				tmp = append(tmp, State.Vals[j])
-			}
-			State.Vals = tmp
+
+			State.Vals = append(State.Vals[:i], State.Vals[i+1:]...)
 			return true
 		}
 	}
