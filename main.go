@@ -30,9 +30,10 @@ type (
 	// Structure of a single data source. Anything in capitals will
 	// get marshalled over to any connecting browser
 	Datasource struct {
-		Name        string
-		Create_date time.Time
-		Params      string
+		Name        string    // bla.te.jfwoiejf.1MinuteRate, etc
+		Create_date time.Time // Holds timestamp of when DS got created
+		Params      string    // Holds things like retention schema's, etc
+		filename    string    // /opt/graphite/whisper/etc
 	}
 
 	// Holds the state (all newly detected data sources)
@@ -48,6 +49,10 @@ type (
 		GraphiteURL      string
 		ServerPort       int
 		logfileLocation  loglocslice
+
+		// If set, allow server to delete data sources that were encountered (not
+		// random ones, only the ones in the State (e.g. the last maxState # of items)
+		AllowDsDeletes bool
 
 		// These are used for reporting Graphite-news' own
 		// stats to a Graphite server. If that server is being monitored
@@ -95,12 +100,13 @@ func init() {
 	flag.IntVar(&C.ServerPort, "p", 2934, "Port number the webserver will bind to (pick a free one please)")
 	flag.StringVar(&C.GraphiteURL, "s", "http://localhost:8080", "URL of the Graphite render API, no trailing slash. Apple rendezvous domains do not work (like http://machine.local, use IPs in that case)")
 	flag.Var(&C.logfileLocation, "l", "One or more locations of the Carbon logfiles we need to tail. (F.ex. -l file1 -l file2 -l *.log)")
+	flag.BoolVar(&C.AllowDsDeletes, "d", false, "If set, allow clients to delete recently created data sources")
 	flag.BoolVar(&C.reporterGraphiteEnabled, "r", false, "If set, report our own statistics every minute to a graphite host")
 	flag.StringVar(&C.reporterGraphiteHost, "rh", "localhost:2003", "Change the graphite host for pushing metrics towards")
 	flag.StringVar(&C.reporterGraphitePrep, "rp", "graphite-news.metrics", "Prepend all metric names with this string")
 
 	flag.Usage = func() {
-		fmt.Printf("Usage: graphite-news [-i sec] [-p port] [-s graphite url] [-r] -l logfile \n\n")
+		fmt.Printf("Usage: graphite-news [-i sec] [-p port] [-s graphite url] [-r] [-d] -l logfile \n\n")
 		flag.PrintDefaults()
 	}
 }
@@ -156,6 +162,43 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
+}
+
+func deleteFile(dsName string) (err bool) {
+	l := log.New(os.Stdout, "main	", myLogFormat)
+	m := metrics.GetOrRegisterCounter("deletes", metrics.DefaultRegistry)
+
+	if len(dsName) < 1 {
+		l.Printf("DELETE called, ignoring b/c/o unlikely data source name: %v", dsName)
+		return true
+
+	}
+
+	if _, err := os.Stat(dsName); os.IsNotExist(err) {
+		l.Printf("DELETE called but no such file or directory: %s", dsName)
+		return true
+	}
+
+	removeErr := os.Remove(dsName)
+	if removeErr != nil {
+		l.Printf("DELETE called but failed: %s", dsName)
+		return true
+	}
+
+	m.Inc(1)
+	return false
+}
+
+func deleteHandler(w http.ResponseWriter, r *http.Request) {
+	l := log.New(os.Stdout, "main	", myLogFormat)
+
+	if r.Method != "POST" {
+		l.Printf("DELETE called, ignoring b/c was not a post: %v:%v\n", r.Method, r.URL)
+		// Only allow POSTs to delete DS's
+		return
+	}
+	r.ParseForm()
+	deleteFile(r.PostFormValue("datasourcename"))
 }
 
 func frontpageHandler(w http.ResponseWriter, r *http.Request) {
@@ -245,15 +288,50 @@ func addItemToState(ds Datasource) {
 
 func parseLine(line string) {
 	m_lines := metrics.GetOrRegisterCounter("tail.input_lines", metrics.DefaultRegistry)
-	var dataPath = regexp.MustCompile(`[a-zA-Z\:]*([0-9].*) :: \[creates\] creating database file .*/whisper/(.*)\.wsp (.*)`)
+	var dataPath = regexp.MustCompile(`[a-zA-Z\:]*([0-9].*) :: \[creates\] creating database file (.*/whisper/(.*)\.wsp) (.*)`)
 	m_lines.Inc(1)
 	match := dataPath.FindStringSubmatch(line)
 	if len(match) > 0 {
-		ds := fmt.Sprintf("%s", strings.Replace(match[2], `/`, `.`, -1))
-		tmp := Datasource{Name: ds, Create_date: parseTime(match[1]), Params: match[3]}
+		ds := fmt.Sprintf("%s", strings.Replace(match[3], `/`, `.`, -1))
+		tmp := Datasource{Name: ds, Create_date: parseTime(match[1]), Params: match[4], filename: match[2]}
 		addItemToState(tmp)
 	}
 
+}
+
+func deleteDSbyName(dsName string) bool {
+	if len(getByDS(dsName).Name) == 0 {
+		return false
+	}
+
+	State.Lock()
+	defer State.Unlock()
+
+	for i, ds_tmp := range State.Vals {
+		if ds_tmp.Name == dsName {
+			fmt.Println(i)
+			tmp := State.Vals[:i]
+			for j := i + 1; i < len(State.Vals[j:]); j++ {
+				tmp = append(tmp, State.Vals[j])
+			}
+			State.Vals = tmp
+			return true
+		}
+	}
+	return false
+}
+
+func getByDS(dsName string) Datasource {
+	State.RLock()
+	defer State.RUnlock()
+
+	for _, ds_tmp := range State.Vals {
+		if ds_tmp.Name == dsName {
+			return ds_tmp
+		}
+	}
+	x := Datasource{}
+	return x
 }
 
 func tailLogfile(c chan string, file string) {
@@ -319,6 +397,7 @@ func main() {
 	mux.HandleFunc("/json/", makeHandler(jsonHandler))
 	mux.HandleFunc("/stats/", makeHandler(statsHandler))
 	mux.HandleFunc("/config/", makeHandler(configHandler))
+	mux.HandleFunc("/delete/", makeHandler(deleteHandler))
 
 	// These are all handled by the compiled in Assets
 	mux.HandleFunc("/", makeHandler(frontpageHandler))

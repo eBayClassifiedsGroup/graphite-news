@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"testing"
 )
 
@@ -13,6 +14,43 @@ func BenchmarkHello(b *testing.B) {
 }
 
 // All state is not reset
+func TestDeleteFileNonExisting(t *testing.T) {
+	file := "/slkjasd/wefoiwef/8c2f54b252f1a23b00768bf94bfa48db/"
+	err := deleteFile(file)
+	if err == false {
+		t.Fatal(fmt.Sprintf("Deleting non existing file did not return error: %v", file))
+	}
+}
+func TestDeleteFileNoName(t *testing.T) {
+	file := ""
+	err := deleteFile(file)
+	if err == false {
+		t.Fatal(fmt.Sprintf("Deleting file with no name does not return error: %v", file))
+	}
+}
+
+func TestDeleteFile(t *testing.T) {
+	file := "/tmp/graphite-news-test-file-safe-to-delete-8c2f54b252f1a23b00768bf94bfa48db"
+	// remove the file if it exists, ignore errors, and defer one too
+	// just to be sure everything is gone and clean after the tests
+	os.Remove(file)
+	//defer os.Remove(file)
+
+	// create the file
+	filehandle, _ := os.Create(file)
+	filehandle.Close()
+
+	err := deleteFile(file)
+	if err == true {
+		t.Fatal(fmt.Sprintf("Deleting file returned error: %v", file))
+	}
+
+	// check filesystem to see file is gone
+	_, err1 := os.Stat(file)
+	if err1 == nil {
+		t.Fatal(fmt.Sprintf("Tried deleting file, did not return error but still exists: %s", file))
+	}
+}
 
 func TestGettingAsset(t *testing.T) {
 	file := fmt.Sprintf("%vindex.html", staticAssetsURL)[1:]
@@ -28,6 +66,28 @@ func TestSingleDsIntoState(t *testing.T) {
 	addItemToState(ds1)
 	if (len(State.Vals) - tmp) != 1 {
 		t.Fatal("Not able to add datasource to internal state")
+	}
+
+	// find it back
+	ds2 := getByDS(ds1.Name)
+	if ds1.Name != ds2.Name {
+		t.Fatal("getByDS did not return DS that we know exists")
+	}
+
+	// now delete it
+	if deleteDSbyName(ds1.Name) {
+		fmt.Printf("%+v", State.Vals)
+		// all went well
+		if len(State.Vals) != 0 {
+			t.Fatal("After removing only DS, state is not empty")
+		}
+		ds3 := getByDS(ds1.Name)
+		if ds1.Name == ds3.Name {
+			t.Fatal("getByDS did return DS that should not have been there")
+		}
+	} else {
+		// fatal
+		t.Fatal("Was not allowed to delete ds known to exist")
 	}
 }
 
