@@ -170,21 +170,19 @@ func deleteFile(dsName string) (err bool) {
 
 	if len(dsName) < 1 {
 		l.Printf("DELETE called, ignoring b/c/o unlikely data source name: %v", dsName)
-		return true
-
+		return false
 	}
 
 	if _, err := os.Stat(dsName); os.IsNotExist(err) {
 		l.Printf("DELETE called but no such file: %s", dsName)
-		return true
+		return false
 	}
 
 	removeErr := os.Remove(dsName)
 	if removeErr != nil {
 		l.Printf("DELETE called but failed: %s", dsName)
-		return true
+		return false
 	}
-
 	m.Inc(1)
 	return false
 }
@@ -198,7 +196,23 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	r.ParseForm()
-	deleteFile(r.PostFormValue("datasourcename"))
+	dsName := r.PostFormValue("datasourcename")
+	ds := getDSbyName(dsName)
+	Success := false
+
+	if len(ds.Name) > 0 {
+		if deleteFile(ds.filename) {
+			Success = true
+		}
+	}
+	js, err := json.Marshal(Success)
+	if err == nil && Success == true {
+		w.Write(js)
+	} else {
+		http.Error(w, string(js), http.StatusInternalServerError)
+		l.Printf("DELETE called for '%v' with result: '%v'",
+			dsName, Success)
+	}
 }
 
 func frontpageHandler(w http.ResponseWriter, r *http.Request) {
@@ -300,7 +314,7 @@ func parseLine(line string) {
 }
 
 func deleteDSbyName(dsName string) bool {
-	if len(getByDS(dsName).Name) == 0 {
+	if len(getDSbyName(dsName).Name) == 0 {
 		return false
 	}
 
@@ -318,7 +332,7 @@ func deleteDSbyName(dsName string) bool {
 	return false
 }
 
-func getByDS(dsName string) Datasource {
+func getDSbyName(dsName string) Datasource {
 	State.RLock()
 	defer State.RUnlock()
 

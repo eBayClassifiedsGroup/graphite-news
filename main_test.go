@@ -17,14 +17,14 @@ func BenchmarkHello(b *testing.B) {
 func TestDeleteFileNonExisting(t *testing.T) {
 	file := "/slkjasd/wefoiwef/8c2f54b252f1a23b00768bf94bfa48db/"
 	err := deleteFile(file)
-	if err == false {
+	if err == true {
 		t.Fatal(fmt.Sprintf("Deleting non existing file did not return error: %v", file))
 	}
 }
 func TestDeleteFileNoName(t *testing.T) {
 	file := ""
 	err := deleteFile(file)
-	if err == false {
+	if err == true {
 		t.Fatal(fmt.Sprintf("Deleting file with no name does not return error: %v", file))
 	}
 }
@@ -69,9 +69,9 @@ func TestSingleDsIntoState(t *testing.T) {
 	}
 
 	// find it back
-	ds2 := getByDS(ds1.Name)
+	ds2 := getDSbyName(ds1.Name)
 	if ds1.Name != ds2.Name {
-		t.Fatal("getByDS did not return DS that we know exists")
+		t.Fatal("getDSbyName did not return DS that we know exists")
 	}
 
 	// now delete it
@@ -81,9 +81,9 @@ func TestSingleDsIntoState(t *testing.T) {
 		if len(State.Vals) != 0 {
 			t.Fatal("After removing only DS, state is not empty")
 		}
-		ds3 := getByDS(ds1.Name)
+		ds3 := getDSbyName(ds1.Name)
 		if ds1.Name == ds3.Name {
-			t.Fatal("getByDS did return DS that should not have been there")
+			t.Fatal("getDSbyName did return DS that should not have been there")
 		}
 	} else {
 		// fatal

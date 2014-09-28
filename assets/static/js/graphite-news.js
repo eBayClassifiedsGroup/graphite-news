@@ -9,6 +9,7 @@ gn.getConfig = function() {
     data = jqxhr.responseJSON;
     gn.JsonPullInterval = data.JsonPullInterval;
     gn.GraphiteURL = data.GraphiteURL;
+    gn.AllowDsDeletes = data.AllowDsDeletes;
 
     // New config is read in, but the interval is attached to the
     // timer and wont be updated dynamically. So depending on the 
@@ -31,6 +32,14 @@ function template(row, dss) {
 
 function endsWith(str, suffix) {
 	    return str.indexOf(suffix, str.length - suffix.length) !== -1;
+}
+
+gn.RemoveEnabledHTML = function() {
+	if (!gn.AllowDsDeletes) {
+		return ' disabled '
+	} else {
+		return ''
+	}
 }
 
 gn.GraphiteImg = function(dsname, dsdate, width, derivative, editlink) {
@@ -120,7 +129,7 @@ gn.updateDs = function() {
 		+ '<span class="tsbtntoolbar">'
 		+ '  <div class="btn-group btn-group-sm">'
 		+ '    <a href="'+gn.GraphiteImg($(this).find("td:first").text(),"none",undefined,undefined,true)+'" type="button" class="btn btn-default">Edit</button>'
-		+ '    <a href="" type="button" class="btn btn-default disabled">Remove</button>'
+		+ '    <a id="btnRemove" href="" type="button" class="btn btn-default'+ gn.RemoveEnabledHTML() +'">Remove</button>'
 		+ '  <div>'
 		+ '</span>'
 		+ '</div>'
@@ -128,6 +137,31 @@ gn.updateDs = function() {
               .end()
               .click( function(){ $(this).remove() })
               .insertAfter('#cart .gnhover').fadeIn();
+
+	    // if we allow deletes, attach a handler
+            if (gn.AllowDsDeletes) {
+	      dsName = $(this).find("td:first").text();
+              $("#btnRemove").click(function() {
+
+              $.post("/delete/", { datasourcename: dsName } )
+                .done(function(data) {
+                  alert("Deleting datasource had return value: "+data) 
+                })
+                .fail(function(data) {
+              	  $.growl({
+              	    title: '<strong>DELETING DATA SOURCE</strong><br/> ',
+              	    message: 'Deleting the data source did not work (perhaps did not exist yet or anymore?)'
+                  },{
+              	    type: 'danger', delay: 2500
+                  });
+                })
+              ;
+
+                // remove all opened timeseries
+                $('#cart .timeseries').remove()
+                return false
+              });
+            }
 	  });
         }
      });
