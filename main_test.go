@@ -34,14 +34,14 @@ func TestDeleteFile(t *testing.T) {
 	// remove the file if it exists, ignore errors, and defer one too
 	// just to be sure everything is gone and clean after the tests
 	os.Remove(file)
-	//defer os.Remove(file)
+	defer os.Remove(file)
 
 	// create the file
 	filehandle, _ := os.Create(file)
 	filehandle.Close()
 
-	err := deleteFile(file)
-	if err == true {
+	result := deleteFile(file)
+	if result == false {
 		t.Fatal(fmt.Sprintf("Deleting file returned error: %v", file))
 	}
 
