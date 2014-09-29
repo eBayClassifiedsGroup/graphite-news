@@ -164,27 +164,29 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
-func deleteFile(dsName string) (err bool) {
+func deleteFile(dsFilename string) (err bool) {
 	l := log.New(os.Stdout, "main	", myLogFormat)
 	m := metrics.GetOrRegisterCounter("deletes", metrics.DefaultRegistry)
 
-	if len(dsName) < 1 {
-		l.Printf("DELETE called, ignoring b/c/o unlikely data source name: %v", dsName)
+	if len(dsFilename) < 1 {
+		l.Printf("deleteFile called, ignoring b/c/o unlikely filename: %v", dsFilename)
 		return false
 	}
 
-	if _, err := os.Stat(dsName); os.IsNotExist(err) {
-		l.Printf("DELETE called but no such file: %s", dsName)
+	if _, err := os.Stat(dsFilename); os.IsNotExist(err) {
+		l.Printf("deleteFile called but no such file: %s", dsFilename)
 		return false
 	}
 
-	removeErr := os.Remove(dsName)
+	removeErr := os.Remove(dsFilename)
 	if removeErr != nil {
-		l.Printf("DELETE called but failed: %s", dsName)
+		l.Printf("deleteFile called but failed os.Remove call: %s", dsFilename)
 		return false
 	}
+
+	l.Printf("deleteFile called and succeeded: %s", dsFilename)
 	m.Inc(1)
-	return false
+	return true
 }
 
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
@@ -202,19 +204,19 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	ds := getDSbyName(dsName)
 	Success := false
 
-	if len(ds.Name) > 0 {
-		if deleteFile(ds.filename) {
-			Success = true
-		}
+	if (len(ds.Name) > 0) && (len(ds.filename) > 0) {
+		Success = deleteFile(ds.filename)
 	}
+
 	if Success == true {
 		_ = deleteDSbyName(dsName)
 		w.Write(nil)
 	} else {
 		http.Error(w, "", http.StatusInternalServerError)
 	}
-	l.Printf("DELETE called for '%v' with result: '%v'",
-		dsName, Success)
+
+	l.Printf("DELETE called for '%v' (filename: %v) with result: '%v'",
+		dsName, ds.filename, Success)
 }
 
 func frontpageHandler(w http.ResponseWriter, r *http.Request) {
@@ -325,8 +327,6 @@ func deleteDSbyName(dsName string) bool {
 
 	for i, ds_tmp := range State.Vals {
 		if ds_tmp.Name == dsName {
-			fmt.Println(i)
-
 			State.Vals = append(State.Vals[:i], State.Vals[i+1:]...)
 			return true
 		}

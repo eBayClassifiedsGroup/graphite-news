@@ -17603,8 +17603,6 @@ var _bintree = &_bintree_t{nil, map[string]*_bintree_t{
 		}},
 		"static": &_bintree_t{nil, map[string]*_bintree_t{
 			"css": &_bintree_t{nil, map[string]*_bintree_t{
-				"bootstrap-theme.css": &_bintree_t{assets_static_css_bootstrap_theme_css, map[string]*_bintree_t{
-				}},
 				"bootstrap-theme.css.map": &_bintree_t{assets_static_css_bootstrap_theme_css_map, map[string]*_bintree_t{
 				}},
 				"bootstrap-theme.min.css": &_bintree_t{assets_static_css_bootstrap_theme_min_css, map[string]*_bintree_t{
@@ -17617,17 +17615,19 @@ var _bintree = &_bintree_t{nil, map[string]*_bintree_t{
 				}},
 				"gn.css": &_bintree_t{assets_static_css_gn_css, map[string]*_bintree_t{
 				}},
+				"bootstrap-theme.css": &_bintree_t{assets_static_css_bootstrap_theme_css, map[string]*_bintree_t{
+				}},
 			}},
 			"js": &_bintree_t{nil, map[string]*_bintree_t{
-				"bootstrap-growl.js": &_bintree_t{assets_static_js_bootstrap_growl_js, map[string]*_bintree_t{
-				}},
-				"bootstrap.js": &_bintree_t{assets_static_js_bootstrap_js, map[string]*_bintree_t{
-				}},
 				"bootstrap.min.js": &_bintree_t{assets_static_js_bootstrap_min_js, map[string]*_bintree_t{
 				}},
 				"graphite-news.js": &_bintree_t{assets_static_js_graphite_news_js, map[string]*_bintree_t{
 				}},
 				"jquery-1.11.1.js": &_bintree_t{assets_static_js_jquery_1_11_1_js, map[string]*_bintree_t{
+				}},
+				"bootstrap-growl.js": &_bintree_t{assets_static_js_bootstrap_growl_js, map[string]*_bintree_t{
+				}},
+				"bootstrap.js": &_bintree_t{assets_static_js_bootstrap_js, map[string]*_bintree_t{
 				}},
 			}},
 		}},
