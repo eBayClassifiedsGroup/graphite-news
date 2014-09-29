@@ -43,28 +43,33 @@ This should get you a `graphite-news` binary in `$GOPATH/bin`. Getting help give
 
     $ graphite-news -h
 
-    Usage: graphite-news [-i sec] [-p port] [-s graphite url] [-r] -l logfile
-    
-      -i=5000: Number of [ms] interval for Web UI's to update themselves. Clients only update 
-               their config every 5min
-      -l=[]: One or more locations of the Carbon logfiles we need to tail. 
-             (F.ex. -l file1 -l file2 -l *.log)
-      -p=2934: Port number the webserver will bind to (pick a free one please)
-      -r=false: If set, report our own statistics every minute to a graphite host
-      -rh="localhost:2003": Change the graphite host for pushing metrics towards
-      -rp="graphite-news.metrics": Prepend all metric names with this string
-      -s="http://localhost:8080": URL of the Graphite render API, no trailing 
-             slash. Apple rendezvous domains do not work (like http://machine.local, use 
-             IPs in that case)
+Usage: graphite-news [-i sec] [-p port] [-s graphite url] [-r] [-d] -l logfile
+
+  * d=false: If set, allow clients to delete recently created data sources
+  * i=5000: Number of [ms] interval for Web UI's to update themselves. Clients only update their config every 5min
+  * l=[]: One or more locations of the Carbon logfiles we need to tail. (F.ex. -l file1 -l file2 -l *.log)
+  * p=2934: Port number the webserver will bind to (pick a free one please)
+  * r=false: If set, report our own statistics every minute to a graphite host
+  * rh="localhost:2003": Change the graphite host for pushing metrics towards
+  * rp="graphite-news.metrics": Prepend all metric names with this string
+  * s="http://localhost:8080": URL of the Graphite render API, no trailing slash. Apple rendezvous domains do not work (like http://machine.local, use IPs in that case)
 
 The two important ones are the input (`-l` should point to the carbon logfile,
 or whatever is storing the standard output of the carbon deamon) and the output
 (`-s` the URL of the Graphite render API). Example:
 
-    $ ~/graphite-news -l /opt/graphite/log/launchctl-carbon.stdout -s http://192.168.1.66:8080
+    $ ~/graphite-news -s http://192.168.1.66:8080 -l /opt/graphite/log/launchctl-carbon*.stdout
 
-Currently `-l` does not allow for globbing or multiple files in general.
-
+The flag `-d` will enable a delete button in the UI. Once clicked, the
+go-server will attempt to remove the data source from disk. This can come in
+handy to keep your list of metrics clean if for some reason data sources were
+created by accident or temporarily. I find this personally very handy (e.g. you
+could now remove that `local.random.diceroll`), but the security risk is
+entirely yours. Any web client never communicates the actual file name to
+remove though which should limit the damage that can be done.  (Clients order
+the server to remove the file associated with data source name so only those
+can be removed, and even then only the ones Graphite News knows about (by
+default limited to the last 100 created)).
 
 Usage of Webinterface
 ---------------------
