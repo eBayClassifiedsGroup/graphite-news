@@ -193,8 +193,10 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		l.Printf("DELETE called, ignoring b/c was not a post: %v:%v\n", r.Method, r.URL)
 		// Only allow POSTs to delete DS's
+		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
+
 	r.ParseForm()
 	dsName := r.PostFormValue("datasourcename")
 	ds := getDSbyName(dsName)
@@ -205,14 +207,13 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 			Success = true
 		}
 	}
-	js, err := json.Marshal(Success)
-	if err == nil && Success == true {
-		w.Write(js)
+	if Success == true {
+		w.Write(nil)
 	} else {
-		http.Error(w, string(js), http.StatusInternalServerError)
-		l.Printf("DELETE called for '%v' with result: '%v'",
-			dsName, Success)
+		http.Error(w, "", http.StatusInternalServerError)
 	}
+	l.Printf("DELETE called for '%v' with result: '%v'",
+		dsName, Success)
 }
 
 func frontpageHandler(w http.ResponseWriter, r *http.Request) {

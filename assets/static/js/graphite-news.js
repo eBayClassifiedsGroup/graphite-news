@@ -145,14 +145,21 @@ gn.updateDs = function() {
 
               $.post("/delete/", { datasourcename: dsName } )
                 .done(function(data) {
-                  alert("Deleting datasource had return value: "+data) 
+              	  $.growl({
+              	    title: '<strong>DELETING DATA SOURCE</strong><br/><i>'+dsName+'</i><br/>',
+              	    message: 'Deleting the data source worked. If it re-appears it<br/>is because the data source provider kept on sending metrics.'
+                  },{
+              	    type: 'success', delay: 5000, mouse_over: 'pauze', offset: 75
+                  });
+		  // remove the row from the table
+	          $('tr:has(td:contains("'+dsName+'"))').remove()
                 })
                 .fail(function(data) {
               	  $.growl({
-              	    title: '<strong>DELETING DATA SOURCE</strong><br/> ',
-              	    message: 'Deleting the data source did not work (perhaps did not exist yet or anymore?)'
+              	    title: '<strong>DELETING DATA SOURCE</strong><br/><i>'+dsName+'</i><br/>',
+              	    message: 'Deleting the data source did not work<br/>Possible reasons</br><ul><li>Perhaps the item does not exist</li><li>Permissions problem server-side</li></ul>'
                   },{
-              	    type: 'danger', delay: 2500
+              	    type: 'danger', delay: 5000, mouse_over: 'pauze', offset: 75
                   });
                 })
               ;
