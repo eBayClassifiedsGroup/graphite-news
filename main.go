@@ -208,6 +208,7 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if Success == true {
+		_ = deleteDSbyName(dsName)
 		w.Write(nil)
 	} else {
 		http.Error(w, "", http.StatusInternalServerError)
