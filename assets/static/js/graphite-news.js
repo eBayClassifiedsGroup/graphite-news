@@ -25,7 +25,7 @@ gn.getConfig = function() {
 
 function template(row, dss) {
   row.find('.item_name').text(dss.Name);
-  row.find('.item_date').text(dss.Create_date);
+  row.find('.item_date').html("<abbr class='timeago' title='"+dss.Create_date+"'>"+dss.Create_date+"</abbr>");
   row.find('.item_options').text(dss.Params);
   return row;
 }
@@ -170,6 +170,8 @@ gn.updateDs = function() {
               });
             }
 	  });
+	  // update "Date" column with humanized timestamps
+	  jQuery("abbr.timeago").timeago();
         }
      });
   })
