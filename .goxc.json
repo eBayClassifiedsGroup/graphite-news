@@ -1,0 +1,12 @@
+{
+	"Arch": "386",
+	"Os": "darwin,linux,windows",
+	"BuildConstraints": "linux,windows,darwin",
+	"PackageVersion": "0.0.1",
+	"PrereleaseInfo": "alpha",
+	"ConfigVersion": "0.9",
+	"Resources": {
+            "Include": "INSTALL*,README*,LICENSE*,CHANGELOG*,sample.log",
+            "Exclude": "*.go"
+        }
+}

@@ -67,6 +67,10 @@ type (
 )
 
 var (
+	// Will hold version information from https://github.com/laher/goxc
+	VERSION    string
+	BUILD_DATE string
+
 	// declare a globally scoped State variable, otherwise
 	// the request handlers can't get to it. If there is a better
 	// way to do this, plmk.
@@ -96,6 +100,11 @@ func (i *loglocslice) Set(value string) error {
 }
 
 func init() {
+	if len(VERSION) == 0 {
+		VERSION = "non-packaged"
+		BUILD_DATE = "now"
+	}
+
 	flag.IntVar(&C.JsonPullInterval, "i", 5000, "Number of [ms] interval for Web UI's to update themselves. Clients only update their config every 5min")
 	flag.IntVar(&C.ServerPort, "p", 2934, "Port number the webserver will bind to (pick a free one please)")
 	flag.StringVar(&C.GraphiteURL, "s", "http://localhost:8080", "URL of the Graphite render API, no trailing slash. Apple rendezvous domains do not work (like http://machine.local, use IPs in that case)")
@@ -106,7 +115,8 @@ func init() {
 	flag.StringVar(&C.reporterGraphitePrep, "rp", "graphite-news.metrics", "Prepend all metric names with this string")
 
 	flag.Usage = func() {
-		fmt.Printf("Usage: graphite-news [-i sec] [-p port] [-s graphite url] [-r] [-d] -l logfile \n\n")
+		fmt.Printf("Usage: graphite-news [-i sec] [-p port] [-s graphite url] [-r] [-d] -l logfile \n")
+		fmt.Printf("Version: %v (Compiled at %v). Code over at: https://github.com/ojilles/graphite-news/\n\n", VERSION, BUILD_DATE)
 		flag.PrintDefaults()
 	}
 }
@@ -428,10 +438,12 @@ func main() {
 	go tailLogfiles(error_channel)
 	go reportMetrics()
 
-	l.Println("Graphite News -- Showing which new metrics are available since 2014\n")
+	l.Println("Graphite News -- Showing which new metrics are available since 2014")
+	l.Println(fmt.Sprintf("Version: %v (Compiled at %v). Code over at: https://github.com/ojilles/graphite-news/", VERSION, BUILD_DATE))
 	l.Println(fmt.Sprintf("Graphite News -- http://localhost:%v		:: Main User Interface", C.ServerPort))
 	l.Println(fmt.Sprintf("Graphite News -- http://localhost:%v/config/	:: Internal configuration in JSON", C.ServerPort))
 	l.Println(fmt.Sprintf("Graphite News -- http://localhost:%v/stats/	:: Internal Metrics in JSON", C.ServerPort))
+	l.Println(fmt.Sprintf("Graphite News -- http://localhost:%v/json/	:: JSON dump of new graphite data sources", C.ServerPort))
 	l.Println(fmt.Sprintf("Configuration: %+v", C))
 	// Wait for errors to appear then shut down
 	l.Println(<-error_channel)
