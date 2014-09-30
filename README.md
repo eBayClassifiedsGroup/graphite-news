@@ -149,3 +149,5 @@ another machine for example).  Effectively, `build-dst.sh` only does:
 
 `go-bindata -ignore=\\.swp$ assets/...`
 
+Compiling across platforms is done via `goxc`, install via `go get
+github.com/laher/goxc`, then run `goxc` in the working directory.
