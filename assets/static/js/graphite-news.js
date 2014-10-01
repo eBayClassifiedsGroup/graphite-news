@@ -10,6 +10,8 @@ gn.getConfig = function() {
     gn.JsonPullInterval = data.JsonPullInterval;
     gn.GraphiteURL = data.GraphiteURL;
     gn.AllowDsDeletes = data.AllowDsDeletes;
+    gn.Version = data.Version;
+    gn.CompileTime = data.CompileTime;
 
     // New config is read in, but the interval is attached to the
     // timer and wont be updated dynamically. So depending on the 
@@ -20,6 +22,9 @@ gn.getConfig = function() {
       gn.toggle();
       gn.toggle();
     }
+
+    // Update Version number
+    $('#gn-version').text(gn.Version);
   });
 }
 

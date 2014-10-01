@@ -45,6 +45,8 @@ type (
 	// Holds all configuration items for main. Anything with a capital
 	// will get marshalled towards any browsers connecting
 	configuration struct {
+		Version          string
+		CompileTime      string
 		JsonPullInterval int
 		GraphiteURL      string
 		ServerPort       int
@@ -104,6 +106,8 @@ func init() {
 		VERSION = "non-packaged"
 		BUILD_DATE = "now"
 	}
+	C.Version = VERSION
+	C.CompileTime = BUILD_DATE
 
 	flag.IntVar(&C.JsonPullInterval, "i", 5000, "Number of [ms] interval for Web UI's to update themselves. Clients only update their config every 5min")
 	flag.IntVar(&C.ServerPort, "p", 2934, "Port number the webserver will bind to (pick a free one please)")
