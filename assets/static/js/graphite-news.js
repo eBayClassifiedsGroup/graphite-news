@@ -20,6 +20,9 @@ gn.getConfig = function() {
 			gn.toggle();
 			gn.toggle();
 		}
+
+		// Update Version number
+		$('#gn-version').text(gn.Version);
 	});
 }
 
