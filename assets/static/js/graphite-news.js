@@ -73,7 +73,7 @@ gn.GraphiteImg = function(dsname, dsdate, width, derivative, editlink) {
 	tmp = tmp + escape(dsname)
 	if(derivative) { tmp = tmp + ")" }
 	tmp = tmp + ",'si')"
-	tmp = tmp + "&lineMode=connected"
+	tmp = tmp + "&lineMode=connected&areaAlpha=0.15&areaMode=all"
 
 	return tmp
 }
