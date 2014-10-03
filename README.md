@@ -24,7 +24,7 @@ Build with (or exists despite the following things being used):
     * Tested on Go 1.3 and tip
     * Started to use [goxc](https://github.com/laher/goxc/) for cross platform
       compilation. (Work on a Mac but most graphite installs are on Ubuntu,
-      bear with me, not my area of expertise)
+      bear with me, not my area of expertise. Tested once on Windows succesfully as well.)
  * jQuery
  * Bootstrap
  * [Travis.ci](https://travis-ci.org/ojilles/graphite-news) for running all the unit tests: [![Build Status](https://travis-ci.org/ojilles/graphite-news.svg?branch=master)](https://travis-ci.org/ojilles/graphite-news)
