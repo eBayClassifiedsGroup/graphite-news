@@ -74,6 +74,11 @@ the server to remove the file associated with data source name so only those
 can be removed, and even then only the ones Graphite News knows about (by
 default limited to the last 100 created)).
 
+If you are using Ansible, you can thank [ianunruh](https://github.com/ianunruh)
+for providing an [Ansible
+role](https://github.com/ianunruh/monitoring-ansible/tree/master/roles/graphite-news)
+for Graphite News.
+
 Usage of Webinterface
 ---------------------
 After starting `graphite-news`, it will tail through your logfile in search for
