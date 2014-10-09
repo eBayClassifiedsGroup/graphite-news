@@ -320,12 +320,12 @@ func addItemToState(ds Datasource) {
 
 func parseLine(line string) {
 	m_lines := metrics.GetOrRegisterCounter("tail.input_lines", metrics.DefaultRegistry)
-	var dataPath = regexp.MustCompile(`[a-zA-Z\:]*([0-9].*) :: \[creates\] creating database file (.*/whisper/(.*)\.wsp) (.*)`)
+	var dataPath = regexp.MustCompile(`[a-zA-Z\:]*([0-9].*) ::( \[creates\])? creating database file (.*/whisper/(.*)\.wsp) (.*)`)
 	m_lines.Inc(1)
 	match := dataPath.FindStringSubmatch(line)
 	if len(match) > 0 {
-		ds := fmt.Sprintf("%s", strings.Replace(match[3], `/`, `.`, -1))
-		tmp := Datasource{Name: ds, Create_date: parseTime(match[1]), Params: match[4], filename: match[2]}
+		ds := fmt.Sprintf("%s", strings.Replace(match[4], `/`, `.`, -1))
+		tmp := Datasource{Name: ds, Create_date: parseTime(match[1]), Params: match[5], filename: match[3]}
 		addItemToState(tmp)
 	}
 

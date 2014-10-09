@@ -153,6 +153,8 @@ func TestParsing(t *testing.T) {
 		{1, "launchctl-carbon.stdout:24/08/2014 23:10:40 :: [creates] creating database file /opt/graphite/storage/whisper/mac-mini_local/collectd/curl_xml-default/gauge-tvseries_watched-Babylon_5.wsp (archive=[(60, 525600), (600, 518400)] xff=None agg=None)"},
 		{1, "launchctl-carbon.stdout:24/08/2014 23:10:40 :: [creates] creating database file /opt/graphite/storage/whisper/mac-mini_local/collectd/curl_xml-default/gauge-tvseries_total-Babylon_5.wsp (archive=[(60, 525600), (600, 518400)] xff=None agg=None)"},
 		{0, "launchctl-carbon.stdout:24/08/2014 23:10:40 :: [creates] creating database file /opt/graphite/storage/whisper/mac-mini_local/collectd/curl_xml-default/.wsp (archive=[(60, 525600), (600, 518400)] xff=None agg=None)"},
+		{1, "launchctl-carbon.stdout:24/08/2014 23:10:40 :: creating database file /opt/graphite/storage/whisper/mac-mini_local/collectd/curl_xml-default/gauge-tvseries_watched-Babylon_6.wsp (archive=[(60, 525600), (600, 518400)] xff=None agg=None)"},
+		{1, "30/09/2014 00:04:17 :: creating database file /opt/graphite/storage/whisper/graphite-news/metrics/POST123/delete/999-percentile.wsp (archive=[(60, 525600), (600, 518400)] xff=None agg=None)"},
 	}
 	State.Vals = nil // start fresh
 	prev_count := len(State.Vals)
