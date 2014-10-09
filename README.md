@@ -67,6 +67,11 @@ statistics of graphite-news (how many data sources are added, how many users
 are looking at the UI, etc) to be reported to Graphite. (See also further
 down.)
 
+If you are using Ansible, you can thank [ianunruh](https://github.com/ianunruh)
+for providing an [Ansible
+role](https://github.com/ianunruh/monitoring-ansible/tree/master/roles/graphite-news)
+for Graphite News.
+
 Usage of Webinterface
 ---------------------
 After starting `graphite-news`, it will tail through your logfile in search for
@@ -141,7 +146,7 @@ Build with (or exists despite the following things being used):
     * Tested on Go 1.3 and tip
     * Started to use [goxc](https://github.com/laher/goxc/) for cross platform
       compilation. (Work on a Mac but most graphite installs are on Ubuntu,
-      bear with me, not my area of expertise)
+      bear with me, not my area of expertise. Tested once on Windows succesfully as well.)
  * jQuery
  * Bootstrap
  * [Travis.ci](https://travis-ci.org/ojilles/graphite-news) for running all the unit tests: [![Build Status](https://travis-ci.org/ojilles/graphite-news.svg?branch=master)](https://travis-ci.org/ojilles/graphite-news)
