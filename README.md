@@ -4,7 +4,7 @@ Graphite-News
 There are two leading theories as to why Graphite-News was created: people
 generally had nothing better to do than wonder which new types of information
 were being stored in their Graphite/Carbon databases. Or the *second* theory; I
-needed a little pet project to try out some programming languages, etc. I will
+needed a little pet project to try out some programming in Go, etc. I will
 leave it up to you.
 
 Functionality
@@ -13,40 +13,29 @@ Graphite-News keeps tabs on which new data sources appear in your Graphite
 storage so that you can see what new functionality is being shipped inside
 *your* application. This is then exposed in a easy and simple web interface.
 
-Technology
-----------
-Build with (or exists despite the following things being used):
- * Go (for tailing, server side state, webserver)
-    * [go-bindata](https://github.com/jteeuwen/go-bindata) (to keep 
-      everything in 1 file for easy deployment)
-    * [go-metrics](https://github.com/rcrowley/go-metrics) (of course 
-      we keep tabs on our own metrics as well)
-    * Tested on Go 1.3 and tip
-    * Started to use [goxc](https://github.com/laher/goxc/) for cross platform
-      compilation. (Work on a Mac but most graphite installs are on Ubuntu,
-      bear with me, not my area of expertise)
- * jQuery
- * Bootstrap
- * [Travis.ci](https://travis-ci.org/ojilles/graphite-news) for running all the unit tests: [![Build Status](https://travis-ci.org/ojilles/graphite-news.svg?branch=master)](https://travis-ci.org/ojilles/graphite-news)
-
 Installing
 ----------
 Couple of options, but the easiest (assuming you have Go setup) is just running
-the following:
+the following (looking into providing debian packages and brew cookbooks):
 
     $ go get github.com/ojilles/graphite-news
     $ $GOPATH/bin/graphite-news -l $GOPATH/src/github.com/ojilles/graphite-news/creates.log
 
-(That last command will get it up and running, but is obviously not how you
-actually want to operate this piece of software.) If you have recently created new data sources, you will see those. If not, create a new one for testing purposes with:
+This should get graphite-news up and running, for you to be able to experiment
+with the UI and get a grasp of what it does. If you have recently created new
+data sources, you will see those. If not, create a new one for testing purposes
+with:
 
     $ PORT=2003; SERVER=localhost; echo "local.random.diceroll 4 `date +%s`" | nc ${SERVER} ${PORT}
 
-This should get you a `graphite-news` binary in `$GOPATH/bin`. Getting help gives you:
+Now watch the graphite-news UI and see it showing up there.
+
+Graphite-News has various configuration options which are worth exploring:
 
     $ graphite-news -h
 
 Usage: graphite-news [-i sec] [-p port] [-s graphite url] [-r] [-d] -l logfile
+Version: non-packaged (Compiled at now). Code over at: https://github.com/ojilles/graphite-news/
 
   * d=false: If set, allow clients to delete recently created data sources
   * i=5000: Number of [ms] interval for Web UI's to update themselves. Clients only update their config every 5min
@@ -57,22 +46,26 @@ Usage: graphite-news [-i sec] [-p port] [-s graphite url] [-r] [-d] -l logfile
   * rp="graphite-news.metrics": Prepend all metric names with this string
   * s="http://localhost:8080": URL of the Graphite render API, no trailing slash. Apple rendezvous domains do not work (like http://machine.local, use IPs in that case)
 
-The two important ones are the input (`-l` should point to the carbon logfile,
-or whatever is storing the standard output of the carbon deamon) and the output
-(`-s` the URL of the Graphite render API). Example:
+The most important ones are `-l`, through which you can tell graphite-news
+where carbon is storing it's logfile (or files -- it'll happily monitor
+multiple graphite instances). Depending on command line globbing, prefer to
+list `-l` last. The second setting is `-s` which should point to the Graphite
+Render API, so that we can show the metrics right in the graphite-news UI. For
+example:
 
     $ ~/graphite-news -s http://192.168.1.66:8080 -l /opt/graphite/log/launchctl-carbon*.stdout
 
-The flag `-d` will enable a delete button in the UI. Once clicked, the
-go-server will attempt to remove the data source from disk. This can come in
-handy to keep your list of metrics clean if for some reason data sources were
-created by accident or temporarily. I find this personally very handy (e.g. you
-could now remove that `local.random.diceroll`), but the security risk is
-entirely yours. Any web client never communicates the actual file name to
-remove though which should limit the damage that can be done.  (Clients order
-the server to remove the file associated with data source name so only those
-can be removed, and even then only the ones Graphite News knows about (by
-default limited to the last 100 created)).
+Other settings include `-d` which will expose a Delete button in the UI. This
+can be handy if you notice unwanted data sources in your news. This only works
+if graphite-news is running on the same server as your Carbons and with similar
+permissions. For example, you can now remove that `local.random.diceroll` you
+created for experimentation. Please understand that the security risk of
+enabling this is entirely yours.
+
+Enabling `-r`, possibly with `-rh` and `-rp` allow you to export usage
+statistics of graphite-news (how many data sources are added, how many users
+are looking at the UI, etc) to be reported to Graphite. (See also further
+down.)
 
 Usage of Webinterface
 ---------------------
@@ -137,6 +130,21 @@ Couple of notes:
 
 ![lines-screenshot](https://raw.githubusercontent.com/ojilles/graphite-news/master/docs/images/lines-screenshot.png)
 
+Technology
+----------
+Build with (or exists despite the following things being used):
+ * Go (for tailing, server side state, webserver)
+    * [go-bindata](https://github.com/jteeuwen/go-bindata) (to keep 
+      everything in 1 file for easy deployment)
+    * [go-metrics](https://github.com/rcrowley/go-metrics) (of course 
+      we keep tabs on our own metrics as well)
+    * Tested on Go 1.3 and tip
+    * Started to use [goxc](https://github.com/laher/goxc/) for cross platform
+      compilation. (Work on a Mac but most graphite installs are on Ubuntu,
+      bear with me, not my area of expertise)
+ * jQuery
+ * Bootstrap
+ * [Travis.ci](https://travis-ci.org/ojilles/graphite-news) for running all the unit tests: [![Build Status](https://travis-ci.org/ojilles/graphite-news.svg?branch=master)](https://travis-ci.org/ojilles/graphite-news)
 
 To Compile
 -----------
