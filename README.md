@@ -149,7 +149,7 @@ Build with (or exists despite the following things being used):
       bear with me, not my area of expertise. Tested once on Windows succesfully as well.)
  * jQuery
  * Bootstrap
- * [Travis.ci](https://travis-ci.org/ojilles/graphite-news) for running all the unit tests: [![Build Status](https://travis-ci.org/ojilles/graphite-news.svg?branch=master)](https://travis-ci.org/ojilles/graphite-news)
+ * [Travis.ci](https://travis-ci.org/eBayClassifiedsGroup/graphite-news) for running all the unit tests: [![Build Status](https://api.travis-ci.org/eBayClassifiedsGroup/graphite-news.svg?branch=master)](https://travis-ci.org/eBayClassifiedsGroup/graphite-news)
 
 To Compile
 -----------
